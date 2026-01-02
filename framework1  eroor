@@ -15,20 +15,19 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local MainScreenGui = PlayerGui:WaitForChild("MainScreenGui")
 -- STOMP UI REFERENCES (CORRECT PATH)
 local Settings = MainScreenGui.Crew:WaitForChild("Settings")
-local Settings = Settings:WaitForChild("Frame")
 local StompFrame = Settings:WaitForChild("StompFrame")
 local Template = StompFrame:WaitForChild("StompButtonTemplate")
 
 local StompModules = ReplicatedStorage:WaitForChild("StompFXS")
-
-
 local function PopulateStompFrame()
+	-- clear old buttons
 	for _, v in ipairs(StompFrame:GetChildren()) do
 		if v:IsA("TextButton") and v ~= Template then
 			v:Destroy()
 		end
 	end
 
+	-- create buttons for each stomp
 	for _, stompModule in ipairs(StompModules:GetChildren()) do
 		if stompModule:IsA("ModuleScript") then
 			local button = Template:Clone()
@@ -38,11 +37,13 @@ local function PopulateStompFrame()
 			button.Parent = StompFrame
 
 			button.MouseButton1Click:Connect(function()
-				print("Selected stomp:", stompModule.Name)
+				print("[UI] Equipping stomp:", stompModule.Name)
+				MainRemoteEvent:FireServer("EquipStompFX", stompModule.Name)
 			end)
 		end
 	end
 end
+
 -- OPEN / CLOSE STOMP MENU
 Settings.StompButton.MouseButton1Click:Connect(function()
 	StompFrame.Visible = not StompFrame.Visible
@@ -56,7 +57,7 @@ local ContextActionService = game:GetService("ContextActionService");
 local Lighting = game:GetService("Lighting")
 local HttpService = game:GetService("HttpService")
 
-local DataFolder = Player:WaitForChild("DataFolder")
+local DataFolder = LocalPlayer:WaitForChild("DataFolder")
 local Information = DataFolder:WaitForChild("Information")
 
 local MainRemoteEvent = ReplicatedStorage.MainRemotes:WaitForChild("MainRemoteEvent")
