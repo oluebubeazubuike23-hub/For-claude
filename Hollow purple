@@ -1,0 +1,132 @@
+
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local l__RunService__2 = game:GetService("RunService");
+local l__ReplicatedStorage__3 = game:GetService("ReplicatedStorage");
+local v4 = RaycastParams.new();
+v4.FilterType = Enum.RaycastFilterType.Whitelist;
+v4.FilterDescendantsInstances = { workspace.Map };
+local l__Animations__5 = workspace.Ignored.Animations;
+local l__Debris__1 = game:GetService("Debris");
+local l__RunService__2 = game:GetService("RunService");
+local l__TweenService__3 = game:GetService("TweenService");
+function v1.RunStompFx(p1, p2, p3, p4)
+	local v6 = script.HollowRed:Clone();
+	v6.Parent = workspace.Ignored.Animations;
+	v6.spawn:Play();
+	l__Debris__1:AddItem(v6, 3);
+	for v7, v8 in v6:GetDescendants(), nil do
+		if v8:IsA("ParticleEmitter") then
+			v8:Emit(v8:GetAttribute("EmitCount"));
+		end;
+	end;
+	local l__HumanoidRootPart__4 = p3.Character.HumanoidRootPart;
+	local l__Position__5 = p2.Position;
+	local v9 = l__RunService__2.Heartbeat:Connect(function(p5)
+		v6.CFrame = CFrame.lookAt(l__HumanoidRootPart__4.Position, l__Position__5) * CFrame.new(-8, 2, -8);
+	end);
+	task.wait(0.65);
+	local v10 = script.HollowBlue:Clone();
+	v10.Parent = workspace.Ignored.Animations;
+	v10.spawn:Play();
+	l__Debris__1:AddItem(v10, 2);
+	local v11 = l__RunService__2.Heartbeat:Connect(function(p6)
+		v10.CFrame = CFrame.lookAt(l__HumanoidRootPart__4.Position, l__Position__5) * CFrame.new(8, 2, -8);
+	end);
+	for v12, v13 in v10:GetDescendants(), nil do
+		if v13:IsA("ParticleEmitter") then
+			v13:Emit(v13:GetAttribute("EmitCount"));
+		end;
+	end;
+	task.wait(0.65);
+	v9:Disconnect();
+	v11:Disconnect();
+	local u6 = os.clock() + 1;
+	local v14 = l__RunService__2.Heartbeat:Connect(function(p7)
+		v6.CFrame = (CFrame.lookAt(l__HumanoidRootPart__4.Position, l__Position__5) * CFrame.new(-8, 2, -8)):Lerp(CFrame.lookAt(l__HumanoidRootPart__4.Position, l__Position__5) * CFrame.new(0, 2, -8), 1 - math.clamp(u6 - os.clock(), 0.001, 1));
+	end);
+	local v15 = l__RunService__2.Heartbeat:Connect(function(p8)
+		v10.CFrame = (CFrame.lookAt(l__HumanoidRootPart__4.Position, l__Position__5) * CFrame.new(8, 2, -8)):Lerp(CFrame.lookAt(l__HumanoidRootPart__4.Position, l__Position__5) * CFrame.new(0, 2, -8), 1 - math.clamp(u6 - os.clock(), 0.001, 1));
+	end);
+	local v16 = script.Purple.Spawn:Clone();
+	v16.Parent = l__HumanoidRootPart__4;
+	v16:Play();
+	l__Debris__1:AddItem(v16, 6);
+	task.wait(0.7);
+	for v17, v18 in v6:GetDescendants(), nil do
+		if v18:IsA("ParticleEmitter") then
+			v18.Enabled = false;
+		end;
+	end;
+	for v19, v20 in v10:GetDescendants(), nil do
+		if v20:IsA("ParticleEmitter") then
+			v20.Enabled = false;
+		end;
+	end;
+	local v21 = script.Purple:Clone();
+	v21.Parent = workspace.Ignored.Animations;
+	v21.Anchored = true;
+	local v22 = l__RunService__2.Heartbeat:Connect(function(p9)
+		v21.CFrame = CFrame.lookAt(l__HumanoidRootPart__4.Position, l__Position__5) * CFrame.new(0, 2, -8);
+	end);
+	task.wait(0.9);
+	local l__Launch__23 = v21.Launch;
+	l__Launch__23.Parent = l__HumanoidRootPart__4;
+	l__Launch__23:Play();
+	v14:Disconnect();
+	v15:Disconnect();
+	v22:Disconnect();
+	v21.Smoke.Dust.Enabled = true;
+	v21.Smoke.Rocks.Enabled = true;
+	for v24, v25 in v21.Wind() do
+		if v25:IsA("ParticleEmitter") then
+			v25.Enabled = true;
+		end;
+	end;
+	for v26, v27 in v21.Launch() do
+		if v27:IsA("ParticleEmitter") then
+			v27:Emit(v27:GetAttribute("EmitCount"));
+		end;
+	end;
+	local u7 = CFrame.lookAt(l__HumanoidRootPart__4.Position, l__Position__5).LookVector.Unit * 140 * Vector3.new(1, 0, 1);
+	local v28 = l__RunService__2.Heartbeat:Connect(function(p10)
+		v21.Position = v21.Position + u7 * p10;
+	end);
+	local v29 = Instance.new("AlignPosition");
+	v29.Parent = p2;
+	v29.Responsiveness = 200;
+	v29.Attachment0 = p2.BodyBackAttachment;
+	v29.Attachment1 = v21.Attachment;
+	v29.MaxVelocity = 5763000;
+	local v30 = script.Blur:Clone();
+	local v31 = script.ColorCorrection:Clone();
+	v30.Parent = workspace.CurrentCamera;
+	v31.Parent = workspace.CurrentCamera;
+	l__TweenService__3:Create(v30, TweenInfo.new(0.15), {
+		Size = 24
+	}):Play();
+	l__TweenService__3:Create(v31, TweenInfo.new(0.15), {
+		Contrast = 6
+	}):Play();
+	task.delay(0.05, function()
+		l__TweenService__3:Create(v30, TweenInfo.new(0.15), {
+			Size = 0
+		}):Play();
+		l__TweenService__3:Create(v31, TweenInfo.new(0.15), {
+			Contrast = 0
+		}):Play();
+		task.wait(0.5);
+	end);
+	task.wait(3);
+	for v32, v33 in v21() do
+		if v33:IsA("ParticleEmitter") then
+			v33.Enabled = false;
+		end;
+	end;
+	task.wait(3);
+	v21:Destroy();
+	v28:Disconnect();
+end;
+return v1;
+
