@@ -1,0 +1,167 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local v2 = require(game.ReplicatedStorage.Modules.Lightning);
+local v3 = require(game.ReplicatedStorage.Modules.Xeno);
+local l__TweenService__4 = game.TweenService;
+local l__Debris__5 = game.Debris;
+local l__ReplicatedStorage__6 = game.ReplicatedStorage;
+local l__Animations__7 = workspace.Ignored.Animations;
+local u1 = 0;
+local u2 = require(game.ReplicatedStorage.Modules.CameraShakerV2);
+function v1.RunStompFx(p1, p2, p3, p4)
+	local v8 = os.time();
+	if v8 - u1 < 14 then
+		return;
+	end;
+	u1 = v8;
+	local l__TweenService__9 = game:GetService("TweenService");
+	local l__Debris__10 = game:GetService("Debris");
+	local v11 = game.ReplicatedStorage.KillFX["Dragon of the Gods"];
+	local v12 = v11.Explosion:Clone();
+	local v13 = v11.Vincent:Clone();
+	local v14 = v11["Shockwave and earth flying up"]:Clone();
+	local v15 = v11.Dragon:Clone();
+	local v16 = v11.Wind:Clone();
+	local v17 = v11.cc1:Clone();
+	v13.Parent = workspace.Ignored.Animations;
+	v13:SetPrimaryPartCFrame(CFrame.new(p2.Position.X - 1, p2.Position.Y + 5, p2.Position.Z));
+	v13.Humanoid:LoadAnimation(v13.Animation):Play();
+	v13["evil laugh 1"]:Play();
+	task.wait(0.3);
+	u2.Explosion(p2.Position);
+	v13["Ground-Slam"]:Play();
+	v17.Parent = game:GetService("Lighting");
+	game.TweenService:Create(v17, TweenInfo.new(0.8, Enum.EasingStyle.Quart), {
+		Brightness = 0.1, 
+		Contrast = 0.8, 
+		Saturation = 1, 
+		TintColor = Color3.fromRGB(214, 214, 214)
+	}):Play();
+	v16.Parent = workspace.Ignored.Animations;
+	v16.Position = p2.Position + Vector3.new(0, 3, 0);
+	local v18 = l__TweenService__9:Create(v16, TweenInfo.new(5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, 0, false, 0), {
+		Size = Vector3.new(1000, 1000, 1000)
+	});
+	task.wait(0.7);
+	v13:Destroy();
+	v15:SetPrimaryPartCFrame(CFrame.new(p2.Position.X, p2.Position.Y, p2.Position.Z));
+	v15.Parent = workspace.Ignored.Animations;
+	v15.AnimationController:LoadAnimation(v15.Animation):Play();
+	v15["Dragon Roar"]:Play();
+	u2.Explosion(p2.Position);
+	wait(2);
+	v15:Destroy();
+	v14:SetPrimaryPartCFrame(CFrame.new(p2.Position.X, p2.Position.Y + 7, p2.Position.Z));
+	v14.Parent = workspace.Ignored.Animations;
+	v14.core_shockwave:Play();
+	local v19 = TweenInfo.new(10, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, 0, false, 0);
+	local v20 = l__TweenService__9:Create(v14.Model1.Shock, v19, {
+		Size = Vector3.new(100, 100, 100)
+	});
+	local v21 = l__TweenService__9:Create(v14.Model1.shoc, v19, {
+		Size = Vector3.new(100, 100, 100)
+	});
+	local v22 = l__TweenService__9:Create(v14.Model1.Wind, v19, {
+		Size = Vector3.new(100, 100, 100)
+	});
+	local v23 = l__TweenService__9:Create(v14.Model1.Wind1, v19, {
+		Size = Vector3.new(100, 100, 100)
+	});
+	local v24 = l__TweenService__9:Create(v14.Model.MeshPart, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	local v25 = l__TweenService__9:Create(v14.Model.Model.MeshPart, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	local v26 = l__TweenService__9:Create(v14.Model.Model.MeshPart1, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	local v27 = l__TweenService__9:Create(v14.Model.Model.MeshPart2, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	local v28 = l__TweenService__9:Create(v14.Model.Model.Model.MeshPart1, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	local v29 = l__TweenService__9:Create(v14.Model.Model.Model.MeshPart2, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	local v30 = l__TweenService__9:Create(v14.Model.Model.Model.MeshPart3, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	local v31 = l__TweenService__9:Create(v14.Model.Model.Model.MeshPart4, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	l__TweenService__9:Create(v14.Model1.MeshPart, v19, {
+		Size = Vector3.new(100, 100, 100)
+	}):Play();
+	v20:Play();
+	v21:Play();
+	v22:Play();
+	v23:Play();
+	v24:Play();
+	v25:Play();
+	v26:Play();
+	v27:Play();
+	v28:Play();
+	v29:Play();
+	v30:Play();
+	v31:Play();
+	u2.Explosion(p2.Position);
+	u2.Explosion(p2.Position);
+	u2.Explosion(p2.Position);
+	u2.Explosion(p2.Position);
+	wait(2);
+	v16:Destroy();
+	v12.Parent = workspace.Ignored.Animations;
+	v12:SetPrimaryPartCFrame(CFrame.new(p2.Position.X, p2.Position.Y, p2.Position.Z));
+	local v32 = l__TweenService__9:Create(v12.m1, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	local v33 = l__TweenService__9:Create(v12.m2, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	local v34 = l__TweenService__9:Create(v12.m3, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	local v35 = l__TweenService__9:Create(v12.m4, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	local v36 = l__TweenService__9:Create(v12.m5, v19, {
+		Size = Vector3.new(450, 450, 450)
+	});
+	u2.Explosion(p2.Position);
+	u2.Explosion(p2.Position);
+	u2.Explosion(p2.Position);
+	u2.Explosion(p2.Position);
+	u2.Explosion(p2.Position);
+	u2.Explosion(p2.Position);
+	v12.explode:Play();
+	v32:Play();
+	v33:Play();
+	v34:Play();
+	v35:Play();
+	v36:Play();
+	wait(5);
+	v14:Destroy();
+	v12:Destroy();
+	local v37 = game.TweenService:Create(v17, TweenInfo.new(0.8, Enum.EasingStyle.Quart), {
+		Brightness = 0, 
+		Contrast = 0, 
+		Saturation = 0, 
+		TintColor = Color3.fromRGB(255, 255, 255)
+	});
+	v37:Play();
+	v37.Completed:Connect(function()
+		v17:Destroy();
+	end);
+	if game.Players.LocalPlayer.Character.BodyEffects.Dead.Value == true and workspace.Ignored.Animations:FindFirstChild("Dragon") then
+		wait(4);
+		workspace.Ignored.Animations:FindFirstChild("Dragon"):Destroy();
+		workspace.Ignored.Animations:FindFirstChild("Wind"):Destroy();
+		workspace.Ignored.Animations:FindFirstChild("Vincent"):Destroy();
+		workspace.Ignored.Animations:FindFirstChild("Explosion"):Destroy();
+		v17:Destroy();
+	end;
+end;
+return v1;
