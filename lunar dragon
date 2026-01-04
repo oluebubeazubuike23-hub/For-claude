@@ -1,0 +1,78 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local l__RunService__2 = game:GetService("RunService");
+local l__ReplicatedStorage__3 = game:GetService("ReplicatedStorage");
+local l__Debris__4 = game:GetService("Debris");
+local l__RunService__5 = game:GetService("RunService");
+local v6 = RaycastParams.new();
+v6.FilterType = Enum.RaycastFilterType.Whitelist;
+v6.FilterDescendantsInstances = { workspace.MAP };
+local u1 = 0;
+local l__Animations__2 = workspace.Ignored.Animations;
+local l__TweenService__3 = game:GetService("TweenService");
+local l__ColorCorrection__4 = script.ColorCorrection;
+local u5 = require(game.ReplicatedStorage.Modules.CameraShaker);
+function v1.RunStompFx(p1, p2, p3, p4)
+	local v7 = os.time();
+	if v7 - u1 < 9 then
+		return;
+	end;
+	u1 = v7;
+	local l__Position__8 = p2.Position;
+	local l__HumanoidRootPart__9 = p3.Character.HumanoidRootPart;
+	local v10 = script["Chinese dragon"]:Clone();
+	v10.Parent = l__Animations__2;
+	v10:MoveTo(l__Position__8 + Vector3.new(6, -20, -8));
+	game.Debris:AddItem(v10, 6);
+	l__TweenService__3:Create(v10.Dragon, TweenInfo.new(0.7), {
+		Transparency = 0
+	}):Play();
+	l__TweenService__3:Create(v10.DragonHead, TweenInfo.new(0.7), {
+		Transparency = 0
+	}):Play();
+	v10.roar:Play();
+	local v11 = v10.AnimationController.Animator:LoadAnimation(script.Animation);
+	v11:Play();
+	v11:AdjustSpeed(0.5);
+	task.wait(1);
+	v11:AdjustSpeed(1);
+	task.wait(0.3);
+	l__ColorCorrection__4.Parent = game.Lighting;
+	for v12, v13 in pairs(v10:GetDescendants()) do
+		if v13:IsA("BasePart") then
+			v13.Anchored = false;
+		end;
+	end;
+	v10["fire-ignite1"]:Play();
+	v10["fire-ignite4"]:Play();
+	local v14 = script.StompFire:Clone();
+	v14.Position = l__Position__8;
+	v14.Emit.Position = v14.Position;
+	v14.Parent = l__Animations__2;
+	game.Debris:AddItem(v14, 6);
+	for v15, v16 in pairs(v10:GetDescendants()) do
+		if v16:IsA("ParticleEmitter") then
+			v16:Emit(v16:GetAttribute("EmitCount"));
+			local v17 = u5.new(Enum.RenderPriority.Camera.Value, function(p5)
+				workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame * p5;
+			end);
+			v17:Start();
+			v17:Shake(u5.Presets.Earthquake);
+		end;
+	end;
+	task.wait(0.4);
+	for v18, v19 in v10:GetDescendants(), nil do
+		if v19:IsA("MeshPart") then
+			v19.Transparency = 1;
+		end;
+	end;
+	task.wait(0.6);
+	for v20, v21 in pairs(v10:GetDescendants()) do
+		if v21:IsA("ParticleEmitter") then
+			v21.Enabled = false;
+			l__ColorCorrection__4.Parent = game.ReplicatedStorage.KillFX["Lunar Dragon"];
+		end;
+	end;
+end;
+return v1;
