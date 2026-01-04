@@ -1,0 +1,43 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local l__Modules__1 = game:GetService("ReplicatedStorage"):WaitForChild("Modules");
+local v2 = require(l__Modules__1.Raycast);
+local v3 = require(l__Modules__1.PseudoDebris);
+local v4 = {};
+local l__Ignored__1 = workspace:WaitForChild("Ignored");
+local u2 = require(l__Modules__1.CustomFX);
+local l__TweenService__3 = game:GetService("TweenService");
+function v4.RunStompFx(p1, p2, p3, p4)
+	local l__FX__5 = script:FindFirstChild("FX");
+	if not l__FX__5 then
+		warn("Assets folder for:", script.Name .. " is nil!");
+		return nil;
+	end;
+	local v6 = l__FX__5.Retired:Clone();
+	v6.Parent = l__Ignored__1;
+	v6:SetPrimaryPartCFrame(CFrame.new(p2.Position));
+	u2:EmitAllParticles(v6);
+	if script.Retired then
+		local v7 = script.Retired:Clone();
+		v7.Parent = p2 or workspace;
+		v7.Volume = 1.85;
+		v7:Play();
+	end;
+	local v8, v9, v10 = pairs(p2.Parent:GetDescendants());
+	while true do
+		local v11, v12 = v8(v9, v10);
+		if not v11 then
+			break;
+		end;
+		if v12:IsA("BasePart") then
+			l__TweenService__3:Create(v12, TweenInfo.new(0.35), {
+				Transparency = 1
+			}):Play();
+		end;
+		if not (not v12:IsA("Fire")) or not (not v12:IsA("Sparkles")) or v12:IsA("Smoke") then
+			v12.Enabled = false;
+		end;	
+	end;
+	return nil;
+end;
+return v4;
