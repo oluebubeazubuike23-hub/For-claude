@@ -1,0 +1,55 @@
+
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local v2 = require(game.ReplicatedStorage.Modules.Xeno);
+local v3 = require(game.ReplicatedStorage.Modules.CameraShaker);
+local l__TweenService__4 = game.TweenService;
+local l__Debris__5 = game.Debris;
+local u1 = require(game.ReplicatedStorage.Modules.Lightning);
+local l__ReplicatedStorage__2 = game.ReplicatedStorage;
+function v1.RunStompFx(p1, p2, p3, p4)
+	task.delay(0, function()
+		local v6 = u1.Bolt((CFrame.new(p2.CFrame.p) * CFrame.new(0, 250, 0) * CFrame.new(math.random(-1, 1), math.random(-1, 1), math.random(-1, 1))).Position, (p2.CFrame * CFrame.new(math.random(-2, 2), math.random(-1, 1), math.random(-1, 1))).Position, 10, 0.25, false);
+		v6.PulseSpeed = 12;
+		v6.PulseLength = 5;
+		v6.MinRadius = 0;
+		v6.MaxRadius = 5;
+		v6.FadeLength = 0.1;
+		v6.Thickness = 3;
+		v6.MinTransparency = 0.25;
+		v6.MaxTransparency = 0.3;
+		v6.Color = Color3.fromRGB(251, 255, 16);
+	end);
+	local v7 = l__ReplicatedStorage__2.KillFX[p1].Stomp:Clone();
+	v7.Parent = p2.Parent.UpperTorso and p2;
+	v7:Play();
+	game.Debris:AddItem(v7, 4);
+	local v8 = l__ReplicatedStorage__2.KillFX[p1].HitPart:Clone();
+	v8.Parent = workspace.Ignored.Animations;
+	v8.CFrame = CFrame.new(p2.CFrame.Position);
+	task.delay(0.25, function()
+		for v9, v10 in pairs(v8.Attachment:GetChildren()) do
+			v10.Enabled = false;
+		end;
+	end);
+	task.delay(0.1, function()
+		l__ReplicatedStorage__2.KillFX[p1].FireEffect:Clone().Parent = p2.Parent.UpperTorso;
+		for v11, v12 in pairs(p2.Parent:GetDescendants()) do
+			if v12:IsA("Basepart") and not v12:IsA("MeshPart") then
+				v12.Color = Color3.fromRGB(0, 0, 0);
+			elseif v12:IsA("Shirt") or v12:IsA("Pants") then
+				v12.Color3 = Color3.fromRGB(0, 0, 0);
+			elseif v12:IsA("Mesh") then
+				v12.VertexColor = Color3.fromRGB(0, 0, 0);
+			elseif v12:IsA("MeshPart") then
+				v12.TextureID = "";
+				v12.Color = Color3.fromRGB(0, 0, 0);
+			end;
+		end;
+	end);
+	game.Debris:AddItem(v8, 4);
+	return nil;
+end;
+return v1;
+
