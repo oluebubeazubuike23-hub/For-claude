@@ -1,29 +1,26 @@
--- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
-
--- Decompiler will be improved VERY SOON!
--- Decompiled with Konstant V2.1, a fast Luau decompiler made in Luau by plusgiant5 (https://discord.gg/brNTY8nX8t)
--- Decompiled on 2025-06-24 13:10:57
--- Luau version 6, Types version 3
--- Time taken: 0.004429 seconds
+-- Fixed Dragon Stomp FX
 
 local module = {}
 local HttpService_upvr = game:GetService("HttpService")
 local TweenService_upvr = game:GetService("TweenService")
 local Debris_upvr = game:GetService("Debris")
-function module.RunStompFx(arg1, arg2, arg3) -- Line 7
-	--[[ Upvalues[3]:
-		[1]: HttpService_upvr (readonly)
-		[2]: TweenService_upvr (readonly)
-		[3]: Debris_upvr (readonly)
-	]]
+
+function module.RunStompFx(arg1, arg2, arg3)
+	-- FIXED: This script uses different parameter structure
+	-- arg1 = stomp name
+	-- arg2 = victim HumanoidRootPart
+	-- arg3 = attacker (Player)
+
 	local var18
-	if arg2.Parent.PrimaryPart then
+	if arg2.Parent and arg2.Parent.PrimaryPart then
 		var18 = arg2.Parent.PrimaryPart.Position
 	else
 		return
 	end
+
 	local clone_upvr_2 = script.Dragon:Clone()
 	clone_upvr_2.Parent = workspace.Blacklisted.Animations
+
 	if arg3 and arg3:FindFirstChild("LOAD_SAVE_DATA") then
 		local any_JSONDecode_result1 = HttpService_upvr:JSONDecode(arg3.DataFolder.Information:FindFirstChild("EquipInventory").Value)
 		if any_JSONDecode_result1["Bullet Colors"] and BrickColor.new(any_JSONDecode_result1["Bullet Colors"]) then
@@ -31,50 +28,41 @@ function module.RunStompFx(arg1, arg2, arg3) -- Line 7
 			clone_upvr_2.Mesh['1'].Color = ColorSequence.new(BrickColor.new(any_JSONDecode_result1["Bullet Colors"]).Color)
 		end
 	end
+
 	clone_upvr_2:MoveTo(var18 + Vector3.new(0, 2, 0))
+
 	TweenService_upvr:Create(clone_upvr_2.Mesh, TweenInfo.new(0.15), {
 		Transparency = 0;
 	}):Play()
+
 	local any_LoadAnimation_result1_2 = clone_upvr_2.AnimationController.Animator:LoadAnimation(clone_upvr_2.Animation)
 	if not any_LoadAnimation_result1_2.IsPlaying then
 		any_LoadAnimation_result1_2:Play()
 	end
-	any_LoadAnimation_result1_2:GetMarkerReachedSignal("ROAR"):Connect(function() -- Line 40
-		--[[ Upvalues[1]:
-			[1]: clone_upvr_2 (readonly)
-		]]
+
+	any_LoadAnimation_result1_2:GetMarkerReachedSignal("ROAR"):Connect(function()
 		if not clone_upvr_2.Mesh.Sound.IsPlaying then
 			clone_upvr_2.Mesh.Sound:Play()
 		end
 		for _, v_upvr in clone_upvr_2.Mesh.Muzzle:GetChildren(), nil do
 			if not v_upvr:IsA("ParticleEmitter") then return end
 			v_upvr.Enabled = true
-			task.delay(0.75, function() -- Line 50
-				--[[ Upvalues[1]:
-					[1]: v_upvr (readonly)
-				]]
+			task.delay(0.75, function()
 				v_upvr.Enabled = false
 			end)
 		end
 	end)
-	any_LoadAnimation_result1_2:GetMarkerReachedSignal("END"):Connect(function() -- Line 54
-		--[[ Upvalues[3]:
-			[1]: TweenService_upvr (copied, readonly)
-			[2]: clone_upvr_2 (readonly)
-			[3]: Debris_upvr (copied, readonly)
-		]]
+
+	any_LoadAnimation_result1_2:GetMarkerReachedSignal("END"):Connect(function()
 		local any_Create_result1 = TweenService_upvr:Create(clone_upvr_2.Mesh, TweenInfo.new(0.3), {
 			Transparency = 1;
 		})
 		any_Create_result1:Play()
-		any_Create_result1.Completed:Connect(function() -- Line 61
-			--[[ Upvalues[2]:
-				[1]: clone_upvr_2 (copied, readonly)
-				[2]: Debris_upvr (copied, readonly)
-			]]
+		any_Create_result1.Completed:Connect(function()
 			clone_upvr_2.Mesh['1'].Enabled = false
 			Debris_upvr:AddItem(clone_upvr_2, 1)
 		end)
 	end)
 end
+
 return module
