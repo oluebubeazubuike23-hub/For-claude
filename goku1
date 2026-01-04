@@ -1,0 +1,432 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local v2 = require(game.ReplicatedStorage.Modules.Lightning);
+local v3 = require(game.ReplicatedStorage.Modules.Xeno);
+local l__Gokutsukami__4 = game.ReplicatedStorage.KillFX.Gokutsukami;
+local l__Debris__1 = game:GetService("Debris");
+local l__LocalPlayer__2 = game.Players.LocalPlayer;
+local l__TweenService__3 = game:GetService("TweenService");
+local u4 = require(game.ReplicatedStorage.Modules.CameraShakerV2);
+local u5 = require(game.ReplicatedStorage.Modules.CameraShaker);
+local u6 = {
+	FE = 5000, 
+	FC = Color3.fromRGB(0, 0, 0), 
+	TOD = 2, 
+	EXP = 1.94
+};
+function v1.RunStompFx(p1, p2, p3, p4)
+	local v5 = game.ReplicatedStorage.KillFX.Gokutsukami.SFX:Clone();
+	v5.Parent = workspace.Ignored.Animations;
+	v5:Play();
+	l__Debris__1:AddItem(v5, 11.102);
+	local v6 = Instance.new("StringValue", workspace);
+	v6.Name = "Akatsmui";
+	l__Debris__1:AddItem(v6, 8);
+	local v7 = game.ReplicatedStorage.KillFX.Gokutsukami.Block:Clone();
+	v7.Parent = workspace.Ignored.Animations;
+	v7.CFrame = CFrame.new(p2.Position);
+	local u7 = nil;
+	local u8 = nil;
+	local u9 = Instance.new("Model", workspace.Ignored.Animations);
+	task.delay(0, function()
+		u7 = game.ReplicatedStorage.KillFX.Gokutsukami.Model:Clone();
+		if UserSettings().GameSettings.SavedQualityLevel.Value <= 2 then
+			u7.Baseplate.Color = Color3.fromRGB(0, 0, 0);
+		end;
+		u7:PivotTo(CFrame.new(5000, math.random(-2000, 2000), math.random(-2000, 2000)));
+		u8 = u7.D;
+		u8.Parent = u9;
+		u8.Humanoid:ApplyDescription((game.Players:GetHumanoidDescriptionFromUserId(game.Players:FindFirstChild(l__LocalPlayer__2.Name).UserId)));
+		u8.Parent = u7;
+	end);
+	l__Debris__1:AddItem(v7, 17);
+	local v8 = {
+		FE = 500, 
+		FC = Color3.fromRGB(100, 87, 72), 
+		TOD = game.Lighting.TimeOfDay, 
+		EXP = 0
+	};
+	local v9 = v7.SFX1:Clone();
+	v9.Parent = workspace.Ignored.Animations;
+	v9:Play();
+	l__Debris__1:AddItem(v9, 9);
+	task.wait(0.1);
+	v7.Attachment.Glow.Enabled = false;
+	v7.Attachment.Gradient.Enabled = false;
+	v7.Attachment.Main.Enabled = false;
+	v7.Attachment.Outline.Enabled = false;
+	v7.Attachment.RocksSustain.Enabled = false;
+	v7.Attachment.att2Smoke.Enabled = false;
+	v7.Attachment.Vortex.Enabled = false;
+	task.delay(0.2, function()
+		for v10, v11 in pairs(v9:GetDescendants()) do
+			l__TweenService__3:Create(v11, TweenInfo.new(1, Enum.EasingStyle.Exponential), {
+				TimeScale = 0
+			}):Play();
+		end;
+	end);
+	task.delay(0.2, function()
+		for v12, v13 in pairs(v9:GetDescendants()) do
+			v13:Play();
+		end;
+	end);
+	local l__Atmosphere__10 = game.Lighting.Atmosphere;
+	local u11 = {};
+	local function u12(p5)
+		local v14 = CFrame.new(p5.Position);
+		coroutine.wrap(function()
+			if workspace.CurrentCamera:FindFirstChild("Blur") == nil then
+				task.wait(0.08);
+				local v15 = script.ColorBlack:Clone();
+				v15.Parent = workspace.CurrentCamera;
+				l__Debris__1:AddItem(v15, 0.022);
+				task.wait(0.022);
+				local v16 = script.ColorFlash:Clone();
+				v16.Parent = workspace.CurrentCamera;
+				l__Debris__1:AddItem(v16, 0.022);
+				task.wait(0.022);
+				local v17 = script.ColorInversion:Clone();
+				v17.Parent = workspace.CurrentCamera;
+				l__Debris__1:AddItem(v17, 0.1);
+				task.wait(0.055);
+				u4.Explosion(p5);
+				local v18 = script.Blur:Clone();
+				v18.Parent = workspace.CurrentCamera;
+				l__Debris__1:AddItem(v18, 1);
+				l__TweenService__3:Create(v18, TweenInfo.new(0.25, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, true), {
+					Size = 30
+				}):Play();
+				for v19 = 1, 28 do
+					u4.SmallBump(p5);
+					task.wait(0.2);
+				end;
+			end;
+		end)();
+		local v20 = script.InsidePart:Clone();
+		v20.CFrame = v14;
+		v20.Parent = u9;
+		local v21 = script.OutsidePart:Clone();
+		v21.CFrame = v14;
+		v21.Parent = u9;
+		task.wait(0.2);
+		l__TweenService__3:Create(v20, TweenInfo.new(0.2, Enum.EasingStyle.Linear), {
+			Size = Vector3.new(50, 50, 50), 
+			Orientation = Vector3.new(90, 0, 90)
+		}):Play();
+		l__TweenService__3:Create(v21, TweenInfo.new(0.2, Enum.EasingStyle.Linear), {
+			Size = Vector3.new(60, 60, 60), 
+			Orientation = Vector3.new(90, 0, 90)
+		}):Play();
+		task.wait(0.08);
+		local v22 = script.Aura:Clone();
+		v22.Position = v14.Position;
+		v22.Parent = u9;
+		local v23 = script.Beam:Clone();
+		v23:SetPrimaryPartCFrame(v14 * CFrame.new(0, -2.5, 45));
+		v23.Parent = u9;
+		l__TweenService__3:Create(v20, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {
+			Size = Vector3.new(46.73, 50, 169.594)
+		}):Play();
+		l__TweenService__3:Create(v21, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {
+			Size = Vector3.new(51.526, 55, 187)
+		}):Play();
+		for v24, v25 in pairs(v23.MovePart.Beams:GetDescendants()) do
+			if v25:IsA("Beam") and v25.Name == "2" then
+				l__TweenService__3:Create(v25, TweenInfo.new(0.3, Enum.EasingStyle.Linear), {
+					Width0 = 15, 
+					Width1 = 43
+				}):Play();
+			elseif v25:IsA("Beam") and v25.Name == "Beam" then
+				l__TweenService__3:Create(v25, TweenInfo.new(0.3, Enum.EasingStyle.Linear), {
+					Width0 = 12, 
+					Width1 = 40
+				}):Play();
+			end;
+		end;
+		local v26 = {};
+		for v27, v28 in pairs(v23:GetDescendants()) do
+			if v28:IsA("Attachment") and v28.Name == "1" then
+				v26[v28] = { v28.Position, v20.Size };
+			elseif v28:IsA("Attachment") then
+				v26[v28] = { v28.Position, v21.Size };
+			end;
+		end;
+		local u13 = nil;
+		u13 = game["Run Service"].RenderStepped:Connect(function()
+			if u9.Parent == nil then
+				u13:Disconnect();
+				return;
+			end;
+			v23.MovePart.Position = v21.Position + Vector3.new(0, v21.Size.Y * 1.5, 0);
+			v23.BeamPart.Position = v21.Position + Vector3.new(0, -v21.Size.Y / 3, 0);
+			for v29, v30 in pairs(v23:GetChildren()) do
+				if v30:IsA("Beam") then
+					v30.Width0 = v21.Size.Z / 9.5;
+					v30.Width1 = v21.Size.Z / 9.5;
+				end;
+			end;
+			for v31, v32 in pairs(v26) do
+				v31.Position = v32[1] * (v20.Size / v32[2]);
+			end;
+		end);
+		if UserSettings().GameSettings.SavedQualityLevel.Value >= 6 then
+			task.delay(0.15, function()
+				for v33, v34 in pairs(v22:GetDescendants()) do
+					if v34:IsA("ParticleEmitter") and v34.Name ~= "Dust" and v34.Name ~= "Rocks" then
+						v34.Rate = 0.5;
+					elseif v34:IsA("ParticleEmitter") then
+						v34.Enabled = true;
+					end;
+				end;
+				task.wait(0.5);
+				for v35, v36 in pairs(v23.MovePart.Beams:GetChildren()) do
+					if v36:IsA("Beam") then
+						v36.Enabled = false;
+					end;
+				end;
+			end);
+		end;
+		l__TweenService__3:Create(v22, TweenInfo.new(3, Enum.EasingStyle.Linear), {
+			Size = Vector3.new(250, 0.01, 250)
+		}):Play();
+		l__TweenService__3:Create(v20, TweenInfo.new(3, Enum.EasingStyle.Linear), {
+			Size = Vector3.new(201.651, 213, 586.675)
+		}):Play();
+		l__TweenService__3:Create(v21, TweenInfo.new(3, Enum.EasingStyle.Linear), {
+			Size = Vector3.new(218.242, 231, 646.888)
+		}):Play();
+	end;
+	local l__CameraType__14 = workspace.CurrentCamera.CameraType;
+	local function u15()
+		for v37, v38 in pairs(u7:GetDescendants()) do
+			l__TweenService__3:Create(v38, TweenInfo.new(1.5, Enum.EasingStyle.Quart), {
+				TimeScale = 1, 
+				Drag = v38.Drag + 2
+			}):Play();
+		end;
+	end;
+	task.delay(0.65, function()
+		u7:WaitForChild("D");
+		l__Atmosphere__10.Parent = game.ReplicatedStorage;
+		l__TweenService__3:Create(u7.D.Highlight, TweenInfo.new(2, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
+			OutlineTransparency = 0.3
+		}):Play();
+		u7:WaitForChild("D2");
+		l__Atmosphere__10.Parent = game.ReplicatedStorage;
+		l__TweenService__3:Create(u7.D2.Highlight, TweenInfo.new(2, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
+			OutlineTransparency = 0.3
+		}):Play();
+		u7:WaitForChild("D3");
+		l__Atmosphere__10.Parent = game.ReplicatedStorage;
+		l__TweenService__3:Create(u7.D3.Highlight, TweenInfo.new(2, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
+			OutlineTransparency = 0.3
+		}):Play();
+		local l__CurrentCamera__39 = workspace.CurrentCamera;
+		while true do
+			task.wait();
+			l__CurrentCamera__39.CameraType = Enum.CameraType.Scriptable;
+			if l__CurrentCamera__39.CameraType == Enum.CameraType.Scriptable then
+				break;
+			end;		
+		end;
+		local l__Camera__40 = u7.Camera;
+		local l__TweenService__41 = game:GetService("TweenService");
+		local v42 = {};
+		for v43, v44 in pairs(u7:GetDescendants()) do
+			if v44:IsA("BasePart") or v44:IsA("Decal") then
+				v42[v44] = v44.Transparency;
+				v44.Transparency = 1;
+				l__TweenService__3:Create(v44, TweenInfo.new(1.2, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {
+					Transparency = v42[v44]
+				}):Play();
+			end;
+		end;
+		u7.Parent = u9;
+		local v45 = u8.Humanoid:LoadAnimation(u8.Animation);
+		local v46 = u7.D2.Humanoid:LoadAnimation(u7.D2.Animation);
+		local v47 = u7.D3.Humanoid:LoadAnimation(u7.D3.Animation);
+		v45:Play(0, 1, 0.95);
+		v46:Play(0, 1, 0.95);
+		v47:Play(0, 1, 0.95);
+		local u16 = nil;
+		u16 = v45:GetMarkerReachedSignal("Die"):Connect(function()
+			local v48 = game.ReplicatedStorage.KillFX.Gokutsukami.TP:Clone();
+			v48.Parent = u9;
+			v48.Position = u8.PrimaryPart.Position;
+			l__TweenService__3:Create(v48.Lines, TweenInfo.new(2.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {
+				Rate = 100
+			}):Play();
+			for v49, v50 in pairs(u8:GetDescendants()) do
+				if v50:IsA("BasePart") then
+					l__TweenService__3:Create(v50, TweenInfo.new(1.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {
+						Transparency = 1
+					}):Play();
+				end;
+			end;
+			l__TweenService__3:Create(u8.Highlight, TweenInfo.new(1.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {
+				OutlineTransparency = 1
+			}):Play();
+			u16:Disconnect();
+		end);
+		local l__CurrentCamera__51 = workspace.CurrentCamera;
+		workspace.CurrentCamera.CFrame = l__Camera__40.CFrame;
+		local u17 = nil;
+		local u18 = l__Camera__40.CFrame;
+		local l__mouse__19 = game:GetService("Players").LocalPlayer:GetMouse();
+		u17 = u5.new(Enum.RenderPriority.Camera.Value, function(p6)
+			if u7.Parent == workspace.Ignored.Animations then
+				u17:Stop();
+				return;
+			end;
+			u18 = l__Camera__40.CFrame * p6 * CFrame.Angles(math.rad((l__mouse__19.Y - l__mouse__19.ViewSizeY / 2) / l__mouse__19.ViewSizeY * -5), math.rad((l__mouse__19.X - l__mouse__19.ViewSizeX / 2) / l__mouse__19.ViewSizeX * -5), 0);
+			l__TweenService__3:Create(workspace.CurrentCamera, TweenInfo.new(0.035, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+				CFrame = u18
+			}):Play();
+		end);
+		u17:Start();
+		u17:Shake(u5.Presets.SceneEye);
+		local v52 = game.ReplicatedStorage.KillFX.Gokutsukami.ColorCorrection2:Clone();
+		v52.Parent = game.Lighting;
+		local v53 = game.ReplicatedStorage.KillFX.Gokutsukami.Clouds:Clone();
+		v53.Parent = workspace.Terrain;
+		l__TweenService__3:Create(v53, TweenInfo.new(1.5), {
+			Density = 0.3
+		}):Play();
+		l__Debris__1:AddItem(v53, 5);
+		l__TweenService__3:Create(u7.Baseplate, TweenInfo.new(50, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut), {
+			Size = u7.Baseplate.Size + Vector3.new(100, 0, 50)
+		}):Play();
+		l__TweenService__3:Create(v52, TweenInfo.new(2.2, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {
+			Brightness = -0.6, 
+			Contrast = 0.2, 
+			Saturation = -0.5, 
+			TintColor = Color3.fromRGB(255, 124, 124)
+		}):Play();
+		local u20 = 450;
+		task.delay(0.5, function()
+			task.wait(1.15);
+			l__TweenService__3:Create(v52, TweenInfo.new(4, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {
+				Brightness = -0.5, 
+				Contrast = 0.35, 
+				Saturation = 0.1, 
+				TintColor = Color3.fromRGB(255, 124, 124)
+			}):Play();
+			u7.Dust.Sound:Play();
+			l__TweenService__3:Create(u7.Camera, TweenInfo.new(2, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut), {
+				CFrame = u7.FadeIn2.CFrame
+			}):Play();
+			task.delay(0.9, function()
+				for v54 = 10, 0, -1 do
+					local v55 = math.random(25, 95);
+					if v54 % 3 == 0 then
+						v55 = -math.random(35, 95);
+						if v54 >= 6 then
+							v55 = -math.random(0, 95);
+						end;
+					elseif v54 >= 6 then
+						v55 = math.random(0, 95);
+					end;
+					local v56 = game.ReplicatedStorage.KillFX.Gokutsukami.BeamER:Clone();
+					v56:PivotTo(u7.NewBeams.CFrame * CFrame.new(v55, -v56.Part.Size.Y * 0.1, -u20 / 2));
+					v56.Parent = u9;
+					local v57 = {};
+					local v58 = {};
+					for v59, v60 in pairs(v56:GetDescendants()) do
+						if v60:IsA("BasePart") then
+							u11[v60] = { v60.Size - Vector3.new(v54 * 0.3, v54 * 0.6, v54 * 0.3), 0, v60.Transparency };
+							v60.Transparency = 1;
+							v60.Size = Vector3.new(0, u11[v60][1].Y / 2, 0);
+							local v61 = l__TweenService__3:Create(v60, TweenInfo.new(3.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+								Size = Vector3.new(math.clamp(u11[v60][1].X * 0.9, 2, 10), u11[v60][1].Y * 1.1, (math.clamp(u11[v60][1].Z * 0.9, 2, 10))), 
+								CFrame = v60.CFrame * CFrame.Angles(0, 9.773843811168245, 0), 
+								Transparency = u11[v60][3]
+							});
+							v61:Play();
+							v57[v59] = v61;
+							if v58[v60.Parent] == nil then
+								v58[v60.Parent] = true;
+								task.delay(2.1, function()
+									u12(v60);
+									v56:Destroy();
+								end);
+							end;
+						end;
+					end;
+					if math.random(1, 2) == 2 then
+						u20 = math.clamp(u20 - u20 / 6, 90, 450);
+					else
+						u20 = math.clamp(u20 - u20 / 8, 90, 450);
+					end;
+					task.wait(math.random(1, 14) / 100);
+				end;
+			end);
+			task.wait(0.8);
+			u7.Dust.ParticleEmitter.Drag = -1;
+			u17:StopSustained(1);
+			local u21 = nil;
+			u21 = u5.new(Enum.RenderPriority.Camera.Value, function(p7)
+				if u7.Parent == nil then
+					u21:Stop();
+					return;
+				end;
+				u21:Start();
+				u21:Shake(u5.Presets.Vibration);
+				u18 = u18 * p7;
+				l__TweenService__3:Create(workspace.CurrentCamera, TweenInfo.new(0.005, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+					CFrame = u18
+				}):Play();
+			end);
+			u21:Start();
+			u21:Shake(u5.Presets.Vibration);
+			u21:Start();
+			u21:Shake(u5.Presets.Vibration);
+			task.wait(1.5);
+			u21:StopSustained(10);
+			task.wait(1);
+			u7.Dust.ParticleEmitter.Drag = 0;
+			task.wait(1.7);
+			local v62 = game.ReplicatedStorage.KillFX.Gokutsukami.ImageLabel:Clone();
+			v62.Parent = game.Players.LocalPlayer.PlayerGui:FindFirstChild("screenGui");
+			l__TweenService__3:Create(v62, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {
+				BackgroundTransparency = 0, 
+				ImageTransparency = 0
+			}):Play();
+			task.delay(1.5, function()
+				l__Atmosphere__10.Parent = game.Lighting;
+				u9:Destroy();
+				v52:Destroy();
+				workspace.CurrentCamera.CameraType = l__CameraType__14;
+				game.Lighting.Sky.StarCount = 3000;
+				game.Lighting.FogEnd = v8.FE;
+				game.Lighting.FogColor = v8.FC;
+				game.Lighting.ExposureCompensation = v8.EXP;
+				game.Lighting.TimeOfDay = v8.TOD;
+				game.Lighting.Ambient = Color3.fromRGB(76, 76, 76);
+				task.wait(0.1);
+				local v63 = u5.new(Enum.RenderPriority.Camera.Value, function(p8)
+					workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame * p8;
+				end);
+				l__TweenService__3:Create(v62, TweenInfo.new(1, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {
+					BackgroundTransparency = 1, 
+					ImageTransparency = 1
+				}):Play();
+				v63:Start();
+				v63:Shake(u5.Presets.Bump);
+				u15();
+				local v64 = game.ReplicatedStorage.KillFX.Gokutsukami.Sound:Clone();
+				v64.Parent = workspace.Ignored.Animations;
+				v64:Play();
+				l__Debris__1:AddItem(v64, 9);
+			end);
+		end);
+		game.Lighting.Ambient = Color3.fromRGB(0, 0, 0);
+		game.Lighting.Sky.StarCount = 0;
+		game.Lighting.FogEnd = u6.FE;
+		game.Lighting.FogColor = u6.FC;
+		game.Lighting.ExposureCompensation = u6.EXP;
+		game.Lighting.TimeOfDay = u6.TOD;
+	end);
+	return nil;
+end;
+return v1;
