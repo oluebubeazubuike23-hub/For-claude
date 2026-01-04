@@ -1,84 +1,88 @@
--- Decompiled with Konstant V2.1, a fast Luau decompiler made in Luau by plusgiant5 (https://discord.gg/brNTY8nX8t)
--- Decompiled on 2026-01-04 06:07:30
--- Luau version 6, Types version 3
--- Time taken: 0.011390 seconds
+-- Fixed Kitty Stomp FX
 
 local module = {}
 local var2_upvw = 0
 local ReplicatedStorage_upvr = game.ReplicatedStorage
-function module.RunStompFx(arg1, arg2, arg3, arg4) -- Line 11
-	--[[ Upvalues[2]:
-		[1]: var2_upvw (read and write)
-		[2]: ReplicatedStorage_upvr (readonly)
-	]]
+
+function module.RunStompFx(arg1, arg2, arg3, arg4)
 	local os_time_result1 = os.time()
 	if os_time_result1 - var2_upvw < 5 then return end
 	var2_upvw = os_time_result1
+
 	local clone_2 = ReplicatedStorage_upvr.KillFX[arg1].Stomp:Clone()
 	clone_2.Parent = arg2
 	clone_2:Play()
+
 	local clone_upvr = ReplicatedStorage_upvr.KillFX.Kitty.Model:Clone()
 	clone_upvr.Parent = workspace.Ignored.Animations
 	game.Debris:AddItem(clone_upvr, 5)
+
 	local any_LoadAnimation_result1_upvr = clone_upvr.AnimationController:LoadAnimation(clone_upvr.Animation)
 	any_LoadAnimation_result1_upvr:Play()
 	any_LoadAnimation_result1_upvr:AdjustSpeed(0.7)
+
 	local var9_upvw
-	var9_upvw = any_LoadAnimation_result1_upvr:GetMarkerReachedSignal("START"):Connect(function() -- Line 27
-		--[[ Upvalues[6]:
-			[1]: clone_upvr (readonly)
-			[2]: arg2 (readonly)
-			[3]: arg3 (readonly)
-			[4]: any_LoadAnimation_result1_upvr (readonly)
-			[5]: ReplicatedStorage_upvr (copied, readonly)
-			[6]: var9_upvw (read and write)
-		]]
+	var9_upvw = any_LoadAnimation_result1_upvr:GetMarkerReachedSignal("START"):Connect(function()
 		clone_upvr.HumanoidRootPart.CFrame = CFrame.new(arg2.Parent.HumanoidRootPart.Position) * CFrame.new(0, 6, 0)
-		clone_upvr.HumanoidRootPart.CFrame = CFrame.new(clone_upvr.HumanoidRootPart.Position, Vector3.new(arg3.Character.HumanoidRootPart.Position.X, clone_upvr.HumanoidRootPart.Position.Y, arg3.Character.HumanoidRootPart.Position.Z)) * CFrame.Angles(0, 0, math.pi)
+
+		-- FIXED: arg3 is victim character, arg4 is attacker (Player)
+		-- Need attacker's character for positioning
+		local attackerChar = arg4.Character or arg4:FindFirstChild("Character")
+		if not attackerChar or not attackerChar:FindFirstChild("HumanoidRootPart") then
+			warn("Kitty: Attacker character not found")
+			return
+		end
+
+		clone_upvr.HumanoidRootPart.CFrame = CFrame.new(
+			clone_upvr.HumanoidRootPart.Position, 
+			Vector3.new(
+				attackerChar.HumanoidRootPart.Position.X, 
+				clone_upvr.HumanoidRootPart.Position.Y, 
+				attackerChar.HumanoidRootPart.Position.Z
+			)
+		) * CFrame.Angles(0, 0, math.pi)
+
 		local var11_upvw
-		var11_upvw = any_LoadAnimation_result1_upvr:GetMarkerReachedSignal("FALL"):Connect(function() -- Line 31
-			--[[ Upvalues[6]:
-				[1]: ReplicatedStorage_upvr (copied, readonly)
-				[2]: arg2 (copied, readonly)
-				[3]: arg3 (copied, readonly)
-				[4]: any_LoadAnimation_result1_upvr (copied, readonly)
-				[5]: clone_upvr (copied, readonly)
-				[6]: var11_upvw (read and write)
-			]]
+		var11_upvw = any_LoadAnimation_result1_upvr:GetMarkerReachedSignal("FALL"):Connect(function()
 			local clone_4 = ReplicatedStorage_upvr.KillFX.Lotus.FX:Clone()
 			clone_4.Parent = workspace.Ignored.Animations
 			clone_4.PrimaryPart.CFrame = CFrame.new(arg2.Position)
 			clone_4.PrimaryPart.Sound:Play()
 			game.Debris:AddItem(clone_4, 5)
+
 			local clone_3 = game.ReplicatedStorage.Adicd.Shock:Clone()
 			clone_3.Parent = workspace.Ignored.Animations
 			clone_3.Color = Color3.fromRGB(255, 143, 207)
 			clone_3.Position = arg2.Position
 			game.TweenService:Create(clone_3, TweenInfo.new(2.5, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
 				Orientation = Vector3.new(0, 200, 0);
-				Position = position;
+				Position = arg2.Position;
 				Size = clone_3.Size + Vector3.new(50, 5, 50);
 				Transparency = 1;
 			}):Play()
 			game.Debris:AddItem(clone_3, 2.5)
+
 			local clone = game.ReplicatedStorage.Adicd.Wind:Clone()
 			clone.Parent = workspace.Ignored.Animations
 			clone.Color = Color3.fromRGB(255, 143, 207)
 			clone.Position = arg2.Position
 			game.TweenService:Create(clone, TweenInfo.new(3, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
 				Orientation = Vector3.new(0, -200, 0);
-				Position = position;
+				Position = arg2.Position;
 				Size = clone.Size + Vector3.new(30, 2, 30);
 				Transparency = 1;
 			}):Play()
 			game.Debris:AddItem(clone, 3)
-			if arg3 and arg3:FindFirstChild("Information") then
+
+			-- Check attacker data folder for custom colors
+			if arg4 and arg4:FindFirstChild("DataFolder") and arg4.DataFolder:FindFirstChild("Information") then
 				for _, v in pairs(clone_4:GetDescendants()) do
 					if v:IsA("BasePart") or v:IsA("MeshPart") then
 						v.Color = Color3.fromRGB(255, 143, 207)
 					end
 				end
 			end
+
 			for _, v_2 in pairs(clone_4:GetChildren()) do
 				local var31 = 1200
 				if math.random(1, 2) == 2 then
@@ -91,48 +95,36 @@ function module.RunStompFx(arg1, arg2, arg3, arg4) -- Line 11
 					Orientation = v_2.Orientation + Vector3.new(0, 0, var31);
 				}):Play()
 			end
+
 			local var34_upvw
-			var34_upvw = any_LoadAnimation_result1_upvr:GetMarkerReachedSignal("WINK"):Connect(function() -- Line 79
-				--[[ Upvalues[3]:
-					[1]: clone_upvr (copied, readonly)
-					[2]: any_LoadAnimation_result1_upvr (copied, readonly)
-					[3]: var34_upvw (read and write)
-				]]
+			var34_upvw = any_LoadAnimation_result1_upvr:GetMarkerReachedSignal("WINK"):Connect(function()
 				clone_upvr.HumanoidRootPart.Meow:Play()
 				clone_upvr.HumanoidRootPart.Wink:Play()
 				game.TweenService:Create(clone_upvr.Wink, TweenInfo.new(0.5), {
 					Size = Vector3.new(0.70499, 1.06099, 0.24500);
 				}):Play()
-				task.delay(0.5, function() -- Line 85
-					--[[ Upvalues[1]:
-						[1]: clone_upvr (copied, readonly)
-					]]
+
+				task.delay(0.5, function()
 					game.TweenService:Create(clone_upvr.Wink, TweenInfo.new(0.5), {
 						Size = Vector3.new(0.70499, 1.06099, 1.40999);
 					}):Play()
 				end)
+
 				clone_upvr.Wink.Attachment.Winker.Enabled = true
-				task.delay(0.2, function() -- Line 91
-					--[[ Upvalues[1]:
-						[1]: clone_upvr (copied, readonly)
-					]]
+				task.delay(0.2, function()
 					clone_upvr.Wink.Attachment.Winker.Enabled = false
 				end)
-				local function _() -- Line 94
-					--[[ Upvalues[2]:
-						[1]: any_LoadAnimation_result1_upvr (copied, readonly)
-						[2]: clone_upvr (copied, readonly)
-					]]
-					any_LoadAnimation_result1_upvr:AdjustSpeed(1)
-					clone_upvr.HumanoidRootPart.Roll:Play()
-					for _, v_3 in pairs(clone_upvr:GetDescendants()) do
-						if v_3:IsA("BasePart") then
-							game.TweenService:Create(v_3, TweenInfo.new(1.5), {
-								Transparency = 1;
-							}):Play()
-						end
+
+				any_LoadAnimation_result1_upvr:AdjustSpeed(1)
+				clone_upvr.HumanoidRootPart.Roll:Play()
+				for _, v_3 in pairs(clone_upvr:GetDescendants()) do
+					if v_3:IsA("BasePart") then
+						game.TweenService:Create(v_3, TweenInfo.new(1.5), {
+							Transparency = 1;
+						}):Play()
 					end
 				end
+
 				var34_upvw:Disconnect()
 			end)
 			var11_upvw:Disconnect()
@@ -141,4 +133,5 @@ function module.RunStompFx(arg1, arg2, arg3, arg4) -- Line 11
 	end)
 	return nil
 end
+
 return module
