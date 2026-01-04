@@ -1,0 +1,52 @@
+
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local v2 = require(game.ReplicatedStorage.Modules.Lightning);
+local v3 = require(game.ReplicatedStorage.Modules.Xeno);
+local v4 = require(game.ReplicatedStorage.Modules.CameraShaker);
+local l__TweenService__5 = game.TweenService;
+local l__Debris__6 = game.Debris;
+local l__ReplicatedStorage__1 = game.ReplicatedStorage;
+function v1.RunStompFx(p1, p2, p3)
+    if p1 == "Lightning" then
+      
+        local TweenService = game:GetService("TweenService")
+        local Debris = game:GetService("Debris")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local Lightning = ReplicatedStorage.KillFX.Lightning.Lightning
+        local Shockwave = ReplicatedStorage.KillFX.Lightning.ShockWave
+        local Sound = Lightning.lightning_bolt
+
+        local lightningClone = Lightning:Clone()
+        lightningClone:SetPrimaryPartCFrame(p2.CFrame) 
+        lightningClone:SetPrimaryPartCFrame(lightningClone:GetPrimaryPartCFrame() * CFrame.new(0, 15, 0))
+        lightningClone.Parent = workspace.Ignored.Animations
+
+        local lightningTweenInfo = TweenInfo.new(0.5)
+        local lightningPositionTween = TweenService:Create(lightningClone.PrimaryPart, lightningTweenInfo, {CFrame = CFrame.new(p2.Position)})
+        lightningPositionTween:Play()
+
+        Sound:Play()
+
+        local shockwaveClone = Shockwave:Clone()
+        shockwaveClone.Parent = workspace.Ignored.Animations
+        shockwaveClone:SetPrimaryPartCFrame(p2.CFrame) 
+        shockwaveClone:SetPrimaryPartCFrame(shockwaveClone:GetPrimaryPartCFrame() * CFrame.new(0, 0.2, 0))
+        shockwaveClone.PrimaryPart.Size = Vector3.new(0.1, 0.1, 0.1)
+        shockwaveClone.PrimaryPart.Transparency = 0.8
+
+        local shockwaveTweenInfo = TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local shockwaveScaleTween = TweenService:Create(shockwaveClone.PrimaryPart, shockwaveTweenInfo, {Size = Vector3.new(8, 8, 8), Transparency = 1})
+        shockwaveScaleTween:Play()
+
+        local transparencyTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+        local transparencyTween = TweenService:Create(lightningClone.PrimaryPart, transparencyTweenInfo, {Transparency = 1})
+        local shockwaveTransparencyTween = TweenService:Create(shockwaveClone.PrimaryPart, transparencyTweenInfo, {Transparency = 1})
+        transparencyTween:Play()
+        shockwaveTransparencyTween:Play()
+    end
+end
+return v1;
+
+
