@@ -1,0 +1,89 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local v2 = require(game.ReplicatedStorage.Modules.Lightning);
+local v3 = require(game.ReplicatedStorage.Modules.Xeno);
+local v4 = require(game.ReplicatedStorage.Modules.CameraShaker);
+local l__TweenService__5 = game.TweenService;
+local l__Debris__6 = game.Debris;
+local u1 = 0;
+local l__ReplicatedStorage__2 = game.ReplicatedStorage;
+function v1.RunStompFx(p1, p2, p3, p4, p5)
+	local v7 = os.time();
+	if v7 - u1 < 6 then
+		return;
+	end;
+	u1 = v7;
+	if p2.Parent.UpperTorso then
+
+	end;
+	local v8 = l__ReplicatedStorage__2.KillFX[p1].Stomp:Clone();
+	v8.Parent = p2.Parent.UpperTorso or p2;
+	v8:Play();
+	game.Debris:AddItem(v8, 5);
+	local v9 = l__ReplicatedStorage__2.KillFX[p1].Spirit:Clone();
+	v9.Parent = workspace.Ignored.Animations;
+	v9.PrimaryPart.CFrame = CFrame.new(p2.Position) * CFrame.new(0, 30, 0) * CFrame.Angles(0, math.rad((math.random(-360, 360))), 0);
+	for v10, v11 in pairs(v9.Model:GetChildren()) do
+		game.TweenService:Create(v11, TweenInfo.new(0.5, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut), {
+			Transparency = 0
+		}):Play();
+	end;
+	game.Debris:AddItem(v9, 5);
+	local v12 = v9.Sonned:LoadAnimation(v9.Animation);
+	v12:Play(0, 1, 1);
+	local u3 = nil;
+	u3 = v12:GetMarkerReachedSignal("GRAB"):Connect(function()
+		v12:AdjustSpeed(1.5);
+		local v13 = v9.HumanoidRootPart:FindFirstChildOfClass("BodyPosition");
+		v13.Parent = p2.Parent.UpperTorso;
+		p5[1](v13);
+		coroutine.wrap(function()
+			while true do
+				v13.Position = v9.GRABBER.Position;
+				task.wait();
+				if v9.Parent == nil then
+					break;
+				end;
+				if v13.Parent == nil then
+					break;
+				end;			
+			end;
+			if v13.Parent ~= nil then
+				v13:Destroy();
+			end;
+		end)();
+		u3:Disconnect();
+	end);
+	local u4 = nil;
+	u4 = v12:GetMarkerReachedSignal("KILL"):Connect(function()
+		v12:AdjustSpeed(1);
+		local v14 = game.ReplicatedStorage.KillFX.Conqueror.HitPart:Clone();
+		v14.Parent = workspace.Ignored.Animations;
+		v14.CFrame = CFrame.new(p2.CFrame.p);
+		task.delay(0.25, function()
+			for v15, v16 in pairs(v14.Attachment:GetChildren()) do
+				v16.Enabled = false;
+			end;
+		end);
+		game.Debris:AddItem(v14, 4);
+		local v17 = Instance.new("Sound", p2.Parent.UpperTorso or p2);
+		v17.SoundId = "rbxassetid://821439273";
+		v17.Volume = 2;
+		v17:Play();
+		u4:Disconnect();
+	end);
+	local u5 = nil;
+	u5 = v12:GetMarkerReachedSignal("END"):Connect(function()
+		for v18, v19 in pairs(v9:GetDescendants()) do
+			if not (not v19:IsA("BasePart")) or not (not v19:IsA("MeshPart")) or v19:IsA("Decal") then
+				game:GetService("TweenService"):Create(v19, TweenInfo.new(0.6), {
+					Transparency = 1
+				}):Play();
+			end;
+		end;
+		u5:Disconnect();
+	end);
+	return nil;
+end;
+return v1;
