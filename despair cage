@@ -1,0 +1,196 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local l__ReplicatedStorage__2 = game.ReplicatedStorage;
+local v3 = require(game.ReplicatedStorage.Modules.Lightning);
+local v4 = require(game.ReplicatedStorage.Modules.Xeno);
+local v5 = require(game.ReplicatedStorage.Modules.CameraShaker);
+local l__Debris__1 = game.Debris;
+local l__TweenService__2 = game.TweenService;
+function v1.RunStompFx(p1, p2, p3, p4)
+	local l__Particles__6 = game.ReplicatedStorage.KillFX["Despair Cage"].Particles;
+	local v7 = game.ReplicatedStorage.KillFX["Despair Cage"];
+	local u3 = Random.new();
+	local function v8(p5, p6, p7, p8)
+		local v9 = {};
+		local v10 = 2 * math.pi;
+		for v11 = 1, p6 do
+			local v12 = nil;
+			local v13 = nil;
+			local v14 = Instance.new(p8);
+			if v14:IsA("Part") then
+				v14.Transparency = 1;
+				v14.Anchored = true;
+				v14.CanCollide = false;
+				v14.Size = Vector3.new(1, 1, 1);
+			end;
+			v14.Parent = p5;
+			local v15 = v11 * (v10 / p6);
+			v12 = (p5.CFrame * CFrame.new(math.cos(v15) * p7, 0, math.sin(v15) * p7)).Position;
+			v13 = p5.Position;
+			if v14:IsA("Attachment") then
+				v14.WorldCFrame = CFrame.lookAt(v12, v13) * CFrame.fromEulerAnglesXYZ(0, -math.pi / u3:NextNumber(1.85, 2), 0);
+			else
+				v14.CFrame = CFrame.lookAt(v12, v13) * CFrame.fromEulerAnglesXYZ(0, -math.pi / u3:NextNumber(1.85, 2), 0);
+			end;
+			table.insert(v9, v14);
+		end;
+		return v9;
+	end;
+	local v16 = { Vector3.new(p2.Position.X, p2.Position.Y - p2.Size.Y / 1.1, p2.Position.Z) };
+	local v17 = {};
+	local v18 = false;
+	local v19 = Instance.new("Part");
+	v19.Anchored = true;
+	v19.CanCollide = false;
+	v19.Transparency = 1;
+	v19.CFrame = CFrame.new(v16[1]) * CFrame.new(0, 30, 0);
+	v19.Size = Vector3.new(1, 1, 1);
+	v19.Parent = workspace;
+	local v20 = v19:Clone();
+	v20.CFrame = CFrame.new(v16[1]);
+	v20.Parent = workspace.Ignored.Animations;
+	Instance.new("Attachment").Parent = v19;
+	local v21 = v8(v19, 35, 0.001, "Attachment");
+	local v22, v23, v24 = ipairs((v8(v20, 35, 30, "Part")));
+	while true do
+		v22(v23, v24);
+		if not v22 then
+			break;
+		end;
+		v24 = v22;
+		local v25 = v21[v22];
+		v17[v23] = v23.CFrame;
+		v23.CFrame = v19.CFrame;
+		l__TweenService__2:Create(v23, TweenInfo.new(u3:NextNumber(0.35, 0.55), Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			CFrame = v17[v23]
+		}):Play();
+		local v26 = Instance.new("Attachment");
+		v26.Parent = v23;
+		local v27 = Instance.new("Attachment");
+		v27.Position = Vector3.new(0.225, 0, 0);
+		v27.Parent = v23;
+		local v28 = l__Particles__6.Birdcage.Trail:Clone();
+		v28.Attachment0 = v26;
+		v28.Attachment1 = v27;
+		v28.Parent = v26;
+		local v29 = l__Particles__6.Birdcage.Smoke.Attachment.Smoke:Clone();
+		v29.Enabled = false;
+		v29.Parent = v26;
+		local v30 = Instance.new("Beam");
+		v30.Attachment0 = v25;
+		v30.Attachment1 = v26;
+		v30.Width0 = 0.1;
+		v30.Width1 = 0.1;
+		v30.LightInfluence = 0;
+		v30.Brightness = 2;
+		v30.FaceCamera = true;
+		v30.Segments = 300;
+		v30.Parent = v26;
+		l__TweenService__2:Create(v30, TweenInfo.new(u3:NextNumber(0.35, 0.925), Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			CurveSize0 = 40
+		}):Play();
+		local u4 = v18;
+		task.spawn(function()
+			task.wait(0.425);
+			l__TweenService__2:Create(v25, TweenInfo.new(0.885, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+				Orientation = v25.Orientation + Vector3.new(0, 175, 0)
+			}):Play();
+			if not u4 then
+				u4 = true;
+				local v31 = Instance.new("Sound");
+				v31.SoundId = "rbxassetid://8634774193";
+				v31.Volume = 1;
+				v31.TimePosition = 0.1;
+				v31.Parent = v19;
+				v31:Play();
+				l__Debris__1:AddItem(v31, 2);
+				local v32 = Instance.new("Sound");
+				v32.SoundId = "rbxassetid://7056816387";
+				v32.Volume = 0.75;
+				v32.TimePosition = 0.1;
+				v32.Parent = v19;
+				v32:Play();
+				l__Debris__1:AddItem(v32, 2);
+			end;
+			task.wait(0.09);
+			v29.Enabled = true;
+			v28.Enabled = true;
+			l__TweenService__2:Create(v23, TweenInfo.new(0.85, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+				CFrame = v23.CFrame * CFrame.new(-17.5, 0, 0)
+			}):Play();
+			l__TweenService__2:Create(v30, TweenInfo.new(1.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				CurveSize0 = 5.333333333333333
+			}):Play();
+			l__TweenService__2:Create(v19, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+				CFrame = v19.CFrame * CFrame.new(0, -10, 0)
+			}):Play();
+			task.wait(0.2);
+			l__TweenService__2:Create(v19, TweenInfo.new(1.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				CFrame = v19.CFrame * CFrame.new(0, 10, 0)
+			}):Play();
+			l__TweenService__2:Create(v30, TweenInfo.new(0.85, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				CurveSize0 = 1.3333333333333333
+			}):Play();
+			task.wait(0.45);
+			l__TweenService__2:Create(v19, TweenInfo.new(0.75, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				CFrame = v19.CFrame * CFrame.new(0, -40, 0)
+			}):Play();
+			v25.Orientation = Vector3.new(0, -250, 0);
+			l__Debris__1:AddItem(v30, 0.6);
+			l__Debris__1:AddItem(v25, 0.75);
+			l__Debris__1:AddItem(v23, 3);
+			task.wait(0.25);
+			v29.Enabled = false;
+		end);	
+	end;
+	task.wait(1.35);
+	local v33 = Instance.new("Sound");
+	v33.SoundId = "rbxassetid://7128851174";
+	v33.Volume = 1;
+	v33.TimePosition = 0.15;
+	v33.Parent = v20;
+	v33:Play();
+	l__Debris__1:AddItem(v33, 2);
+	local v34 = l__Particles__6.Birdcage.Hit:Clone();
+	v34.Position = v16[1];
+	v34.Parent = workspace.Ignored.Animations;
+	local v35 = require(game.ReplicatedStorage.Modules.Xeno);
+	local l__Position__36 = CFrame.new(v34.Position.X, v34.Position.Y + 5, v34.Position.Z).Position;
+	local v37 = {
+		Blast = {
+			DebrisPositions = { l__Position__36, 25, 10 }, 
+			Properties = {
+				Range = 3, 
+				Speed = 0.5, 
+				Duration = 2.6, 
+				origPos = l__Position__36, 
+				newSize = Vector3.new(3, 3, 3)
+			}
+		}
+	};
+	local v38 = v35.createCircle(unpack(v37.Blast.DebrisPositions));
+	for v39 = 1, #v38 do
+		local v40 = v35.RayCastOnMap(v38[v39], Vector3.new(0, -40, 0), true);
+		if v40 then
+			v35.spawnRubble(v40.Instance, v40.Position, v37.Blast.Properties);
+		end;
+	end;
+	local v41, v42, v43 = ipairs(v34.Attachment:GetChildren());
+	while true do
+		v41(v42, v43);
+		if not v41 then
+			break;
+		end;
+		v43 = v41;
+		if v42:IsA("ParticleEmitter") then
+			v42:Emit(v42:GetAttribute("EmitCount"));
+		end;	
+	end;
+	l__TweenService__2:Create(v34.Attachment.PointLight, TweenInfo.new(1.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Brightness = 0
+	}):Play();
+	l__Debris__1:AddItem(v34, 2);
+	return nil;
+end;
+return v1;
