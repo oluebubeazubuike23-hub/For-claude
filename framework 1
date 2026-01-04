@@ -13,8 +13,69 @@ local MainRemoteEvent = ReplicatedStorage.MainRemotes:WaitForChild("MainRemoteEv
 local StarterGui = game:GetService("StarterGui");
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local MainScreenGui = PlayerGui:WaitForChild("MainScreenGui")
+-- STOMP UI REFERENCES (CORRECT PATH)
+-- STOMP UI REFERENCES (CORRECT)
+local Crew = MainScreenGui:WaitForChild("Crew")
+local Settings = Crew:WaitForChild("Settings")
+
+local StompFrame = Settings:WaitForChild("StompFrame")
+local StompButton = Settings:WaitForChild("StompButton")
+
+local Template = StompFrame:WaitForChild("StompButtonTemplate")
+local StompModules = ReplicatedStorage:WaitForChild("KillFX")
+print("KillFX modules found:", #StompModules:GetChildren())
+
+local function PopulateStompFrame()
+	for _, v in ipairs(StompFrame:GetChildren()) do
+		if v:IsA("TextButton") and v ~= Template then
+			v:Destroy()
+		end
+	end
+
+	for _, stompModule in ipairs(StompModules:GetChildren()) do
+		if stompModule:IsA("ModuleScript") then
+			local button = Template:Clone()
+			button.Name = stompModule.Name
+			button.Text = stompModule.Name
+			button.Visible = true
+			button.Parent = StompFrame
+
+			button.MouseButton1Click:Connect(function()
+				print("[CLIENT] Selecting stomp:", stompModule.Name)
+				MainRemoteEvent:FireServer("SetStompFX", stompModule.Name)
+			end)
+		end
+	end
+end
+
+StompButton.MouseButton1Click:Connect(function()
+	StompFrame.Visible = not StompFrame.Visible
+
+	if StompFrame.Visible then
+		PopulateStompFrame()
+	end
+end)
+
+-- OPEN / CLOSE STOMP MENU
+Settings.StompButton.MouseButton1Click:Connect(function()
+	StompFrame.Visible = not StompFrame.Visible
+
+	if StompFrame.Visible then
+		PopulateStompFrame()
+	end
+end)
+
 local ContextActionService = game:GetService("ContextActionService");
 local Lighting = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService")
+
+local DataFolder = LocalPlayer:WaitForChild("DataFolder")
+local Information = DataFolder:WaitForChild("Information")
+
+local MainRemoteEvent = ReplicatedStorage.MainRemotes:WaitForChild("MainRemoteEvent")
+
+-- UI paths (MATCH YOUR UI EXACTLY)
+
 
 Character:WaitForChild("Humanoid");
 Character:WaitForChild("FULLY_LOADED_CHAR", 1/0);
@@ -651,40 +712,92 @@ local u25 = {};
 local u26 = { "19323823", "19323854" };
 local u27 = { "19003948", "19003957", "19003971", "19003978", "19003982", "19003990", "19003998" };
 
+function UpdateStompUnlock()
+	local PlayerData = LocalPlayer.DataFolder
+	local StompFrame = MainScreenGui:FindFirstChild("StompFrame")
+	if not StompFrame then
+		warn("[Stomp UI] Missing StompFrame UI!")
+		return
+	end
 
-MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
-	if p59 == "FX_KILL" then
-		local StompFXName, VictimHRP, AttackerPlayer = ...
+	-- Clear old
+	for _, child in pairs(StompFrame:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
 
-		print("[CLIENT FX] Received FX_KILL:", StompFXName, VictimHRP, AttackerPlayer.Name)
+	-- Read saved stomps list
+	local stompsJSON = PlayerData.Information:FindFirstChild("SavedStomps")
+	local stomps = {}
+	if stompsJSON and stompsJSON.Value ~= "" then
+		stomps = game:GetService("HttpService"):JSONDecode(stompsJSON.Value)
+	end
 
-		-- Find the stomp FX module
-		local StompFXS = ReplicatedStorage:FindFirstChild("StompFXS")
-		if not StompFXS then
-			warn("[CLIENT FX] StompFXS folder not found!")
+	-- Create button for each stomp
+	for _, stompName in ipairs(stomps) do
+		local btn = Instance.new("TextButton")
+		btn.Name = stompName .. "_btn"
+		btn.Text = stompName
+		btn.Size = UDim2.new(0, 120, 0, 30)
+		btn.Parent = StompFrame
+
+		btn.Activated:Connect(function()
+			MainRemoteEvent:FireServer("EquipStompFX", stompName)
+		end)
+	end
+end
+
+MainRemoteEvent.OnClientEvent:Connect(function(action, ...)
+	-- =====================
+	-- STOMP FX
+	-- =====================
+	if action == "FX_KILL" then
+		local stompName, victimHRP, attacker = ...
+
+		if not victimHRP or not victimHRP.Parent then return end
+		print("[CLIENT FX] Playing stomp:", stompName)
+
+		local KillFX = ReplicatedStorage:WaitForChild("KillFX")
+
+		local FXModule = KillFX:FindFirstChild(stompName)
+		if not FXModule then
+			warn("[CLIENT FX] Missing stomp FX:", stompName, "using Regular")
+			FXModule = KillFX:FindFirstChild("Regular")
+			if not FXModule then return end
+		end
+
+		local ok, fx = pcall(require, FXModule)
+		if not ok then
+			warn("[CLIENT FX] Failed to require:", FXModule.Name)
 			return
 		end
 
-		local FXModule = StompFXS:FindFirstChild(StompFXName)
-		if not FXModule then
-			warn("[CLIENT FX] Stomp module not found:", StompFXName)
-			FXModule = StompFXS:FindFirstChild("Regular")
-			if not FXModule then
-				return
-			end
+		if fx.RunStompFx then
+			fx.RunStompFx(
+				stompName,
+				victimHRP,
+				victimHRP.Parent,
+				attacker,
+				nil
+			)
+		elseif fx.Play then
+			fx.Play(victimHRP.Parent, attacker)
+		else
+			warn("[CLIENT FX] No RunStompFx or Play in:", FXModule.Name)
 		end
 
-		-- Run the FX
-		pcall(function()
-			local StompScript = require(FXModule)
-			if StompScript.RunStompFx then
-				local VictimChar = VictimHRP.Parent
-				StompScript.RunStompFx(StompFXName, VictimHRP, VictimChar, LocalPlayer, {})
-			end
-		end)
 		return
 	end
-	if p59 == "KILLED" then
+
+	-- =====================
+	-- UPDATE STOMP
+	-- =====================
+	if action == "UpdateStomp" then
+		UpdateStompUnlock()
+		return
+	end
+	if action == "KILLED" then
 		local Kills = MainScreenGui.Killed
 		Kills.TextLabel.Text = "Killed ".. ...
 		game:GetService("TweenService"):Create(Kills, TweenInfo.new(5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out),
@@ -694,10 +807,10 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 		wait(5)
 		Kills.Visible = false
 	end
-	if p59 == "DROPCASHALL" then
+	if action == "DROPCASHALL" then
 		MainRemoteEvent:FireServer("DROP_CASH_ALL")
 	end
-	if p59 == "MSG" then
+	if action == "MSG" then
 		local v54;
 		v54 = nil;
 		if v54 == nil then
@@ -723,11 +836,11 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 			v54.Position = UDim2.new(0.976, 0, 0);
 		end;
 	end;
-	if p59 == "ReportSent" then
+	if action == "ReportSent" then
 		_G.Notification("Report Sent!", 0.7)
 		return 
 	end;
-	if p59 == "Shout" then
+	if action == "Shout" then
 		local v126 = Instance.new("TextLabel");
 		v126.Size = UDim2.new(1, 0, 1, 0);
 		v126.BackgroundColor3 = Color3.new(0.192157, 0.192157, 0.192157);
@@ -749,7 +862,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 		v126:Destroy();
 		return;
 	end;
-	if p59 == "ShotFrom" then
+	if action == "ShotFrom" then
 		local v73 = ...;
 		local v74 = ReplicatedStorage.DMGIndicator:Clone();
 		v74.Parent = MainScreenGui.DamageIndicator;
@@ -765,7 +878,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 		v74:Destroy();
 		return;
 	end;
-	if p59 == "FerrisWheelUPDATE" then
+	if action == "FerrisWheelUPDATE" then
 		local v79, v80, v81 = ...;
 		task.spawn(function()
 			if _G.updateFerrisWheel == false then
@@ -804,7 +917,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 		end);
 		return;
 	end;
-	if p59 == "BullAnimationSteering" then
+	if action == "BullAnimationSteering" then
 		local v93, v94, v95 = ...;
 		local l__BullControls__96 = MainScreenGui.BullControls;
 		l__BullControls__96.Visible = true;
@@ -873,7 +986,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 			return;
 		end;
 	else
-		if p59 == "GhostVisible" then
+		if action == "GhostVisible" then
 			if _G.Halloween ~= true then
 				return;
 			else
@@ -943,7 +1056,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 				end;
 			end;
 		end;
-		if p59 == "FLAG_LOCATION" then
+		if action == "FLAG_LOCATION" then
 			local v108 = ...;
 			if _G.FLAGLOCATION == nil then
 				_G.FLAGLOCATION = {};
@@ -970,7 +1083,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 				_G.FLAGLOCATION[v108] = false;
 				return;
 			end;
-		elseif p59 == "UPDATEBRFFA" then
+		elseif action == "UPDATEBRFFA" then
 			local v110 = ...;
 			if tonumber(v110) then
 				local v111 = MainScreenGui.BattleRoyaleFFA.Teams:FindFirstChild(v110);
@@ -982,7 +1095,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 				end;
 			end;
 		else
-			if p59 == "BAGGED" then
+			if action == "BAGGED" then
 				local v112 = Instance.new("TextLabel");
 				v112.AnchorPoint = Vector2.new(0.5, 0);
 				v112.Position = UDim2.new(0.5, 0, 0.5, 0);
@@ -1000,7 +1113,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 				v112:Destroy();
 				return;
 			end;
-			if p59 == "Notified" then
+			if action == "Notified" then
 				local v126 = Instance.new("TextLabel");
 				v126.Size = UDim2.new(1, 0, 1, 0);
 				v126.BackgroundColor3 = Color3.new(0.192157, 0.192157, 0.192157);
@@ -1022,7 +1135,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 				v126:Destroy();
 				return;
 			end;
-			if p59 == "ExplodeRadius" then
+			if action == "ExplodeRadius" then
 				local v114, v115 = ...;
 				for v116 = 1, 15 do
 					if (Character.LowerTorso.Position - v114).magnitude <= v115 then
@@ -1034,7 +1147,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 				Character.Humanoid.CameraOffset = Vector3.new(0, 0, 0);
 				return;
 			end;
-			if p59 == "FLASHBANG" then
+			if action == "FLASHBANG" then
 				local v118 = Character.Humanoid.Animator:LoadAnimation(script.FBAnimation);
 				v118:Play(0.100000001, 1, 0.5);
 				local v119 = Instance.new("Sound");
@@ -1063,7 +1176,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 				v120:Destroy();
 				return;
 			end;
-			if p59 == "TeargasBanged" then
+			if action == "TeargasBanged" then
 				local v193 = tick() * 10;				
 				local v118 = Character.Humanoid.Animator:LoadAnimation(script.FBAnimation);
 				v118:Play(0.100000001, 1, 0.5);
@@ -1083,7 +1196,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 				v120.Visible = false
 				return;
 			end;
-			if p59 == "CartRide" then
+			if action == "CartRide" then
 				local l__SeatPart__121 = Character.Humanoid.SeatPart;
 				if l__SeatPart__121 and l__SeatPart__121:IsA("VehicleSeat") and l__SeatPart__121.Parent:FindFirstChild("RTWheel") then
 					v66:Play(0.100000001, 1, 0);
@@ -1100,7 +1213,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 					v66:Stop();
 					return;
 				end;
-			elseif p59 == "Bicycling" then
+			elseif action == "Bicycling" then
 				local l__SeatPart__122 = Character.Humanoid.SeatPart;
 				if l__SeatPart__122 and l__SeatPart__122:IsA("VehicleSeat") and l__SeatPart__122.Parent:FindFirstChild("BikeModel") then
 					v65:Play(0.100000001, 1, 0);
@@ -1118,7 +1231,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 					return;
 				end;
 			else
-				if p59 == "AddHighlightToItem" then
+				if action == "AddHighlightToItem" then
 					local v132, v133 = ...;
 					if v132 then
 						if v133:FindFirstChild("Highlight") then
@@ -1153,7 +1266,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 						return;
 					end;
 				end;
-				if p59 == "AddSelectionToItem" then
+				if action == "AddSelectionToItem" then
 					local v130, v131 = ...;
 					if v130 then
 						if v131:FindFirstChild("SelectionBox") == nil then
@@ -1189,7 +1302,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 						l__BillboardGui__136.Destroy(l__BillboardGui__136);
 						return;
 					end;
-				elseif p59 == "SelectionBoxAdd" then
+				elseif action == "SelectionBoxAdd" then
 					local v137, v138 = ...;
 					if v138 then
 						if v137.FindFirstChild(v137, "SelectionBox") == nil then
@@ -1265,7 +1378,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 					end;
 				else
 
-					if p59 == "CheckPlayerClose" then
+					if action == "CheckPlayerClose" then
 						if _G.GUN_COMBAT_TOGGLE then
 							local l__Players__153 = workspace.Players;
 							local v154, v155, v156 = pairs(l__Players__153.GetChildren(l__Players__153));
@@ -1288,7 +1401,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 							return;
 						end;
 					end;
-					if p59 == "BOOMBOX" then
+					if action == "BOOMBOX" then
 						local v159 = ...;
 						local l__Activated__160 = MainScreenGui.BoomboxFrame.TextButton.Activated;
 						l__Activated__160.connect(l__Activated__160, function()
@@ -1309,11 +1422,11 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 						end);
 						return;
 					end;
-					if p59 == "updateCrewStuff" then
+					if action == "updateCrewStuff" then
 						updateCrewStuff();
 						return;
 					end;
-					if p59 == "FireworkText" then
+					if action == "FireworkText" then
 						if MainScreenGui.FindFirstChild(MainScreenGui, "Fireworktext_") then
 							return;
 						else
@@ -1368,7 +1481,7 @@ MainRemoteEvent.OnClientEvent:connect(function(p59, ...)
 						end;
 					else
 
-						if p59 == "DropMoney" then
+						if action == "DropMoney" then
 							if ... == false then
 								MainScreenGui.WalletDrop.Visible = false;
 							else
@@ -1987,6 +2100,16 @@ v896.MouseButton1Click:Connect(function()
 		openCrewUI()
 	end
 end)
+local Settings = MainScreenGui.Crew:WaitForChild("Settings")
+local StompFrame = Settings:WaitForChild("StompFrame")
+
+MainScreenGui.Crew.Settings.StompButton.MouseButton1Click:Connect(function()
+	StompFrame.Visible = not StompFrame.Visible
+
+	if StompFrame.Visible then
+		PopulateStompFrame()
+	end
+end)
 v_u_902.Parent.TopButton.MouseButton1Click:Connect(function()
 	v_u_902.Visible = false
 	v_u_901.Parent.Top50.Visible = true
@@ -2518,7 +2641,7 @@ MainScreenGui.Crew.Settings.Frame.InnerFrame.List.AntiMacroFling.SwitchFrame.Tex
 	AntiFlingButton.Active = false
 
 	local Player = game.Players.LocalPlayer
-	local DataFolder = Player:FindFirstChild("DataFolder")
+	local DataFolder = LocalPlayer:FindFirstChild("DataFolder")
 	if not DataFolder then
 		warn(">> Datafolder not found for player.")
 		AntiFlingButton.Active = true
