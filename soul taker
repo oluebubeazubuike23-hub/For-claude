@@ -1,0 +1,264 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local v2 = require(game.ReplicatedStorage.Modules.Lightning);
+local v3 = require(game.ReplicatedStorage.Modules.Xeno);
+local l__Debris__4 = game.Debris;
+local u1 = 0;
+local l__ReplicatedStorage__2 = game.ReplicatedStorage;
+local l__TweenService__3 = game.TweenService;
+local u4 = require(game.ReplicatedStorage.Modules.CameraShaker);
+function v1.RunStompFx(p1, p2, p3, p4)
+	local v5 = os.time();
+	if v5 - u1 < 7 then
+		return;
+	end;
+	u1 = v5;
+	local v6 = l__ReplicatedStorage__2.KillFX[p1].FASF:Clone();
+	v6.Parent = p3.Character.HumanoidRootPart;
+	v6:Play();
+	game.Debris:AddItem(v6, 3);
+	local v7 = game.ReplicatedStorage.KillFX["Soul Taker"].Taker:Clone();
+	local v8 = {};
+	for v9, v10 in pairs(v7:GetDescendants()) do
+		if v10.Name ~= "HumanoidRootPart" and v10:IsA("BasePart") then
+			v8[v10] = {
+				SF = v10.Size, 
+				TF = v10.Transparency
+			};
+			v10.Transparency = 2;
+			v10.Size = Vector3.new(0, 0, 0);
+		end;
+	end;
+	v7.Parent = workspace.Ignored.Animations;
+	v7.PrimaryPart.CFrame = p3.Character.PrimaryPart.CFrame;
+	v7.HumanoidRootPart.BeamOne.Debris.Enabled = true;
+	v7.HumanoidRootPart.Attachment.RingRelease.Enabled = true;
+	task.delay(0.25, function()
+		v7.HumanoidRootPart.BeamOne.Debris.Enabled = false;
+		v7.HumanoidRootPart.Attachment.RingRelease.Enabled = false;
+	end);
+	local v11 = l__ReplicatedStorage__2.KillFX[p1].EmperorsHelm:Clone();
+	game.Debris:AddItem(v11, 5);
+	local l__CFrame__12 = p3.Character.HumanoidRootPart.CFrame;
+	local v13 = l__CFrame__12 * CFrame.new(0, 10, 65).Position;
+	local v14 = l__CFrame__12 + l__CFrame__12.LookVector * -30 + Vector3.new(0, -30, 0);
+	v11:SetPrimaryPartCFrame(v14);
+	v11.Parent = v7.Parent;
+	task.delay(0, function()
+		v11.MeshPart.fireball2:Emit(50);
+		task.delay(0.25, function()
+			l__TweenService__3:Create(v11.Union, TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+				Color = Color3.new(0, 0, 0)
+			}):Play();
+			for v15, v16 in pairs(v11:GetChildren()) do
+				if v16:IsA("BasePart") then
+					l__TweenService__3:Create(v16, TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+						Transparency = 1
+					}):Play();
+				end;
+			end;
+			local v17 = v14 + Vector3.new(0, 50, 0);
+			for v18 = 0, 1, 0.01 do
+				game:GetService("RunService").RenderStepped:Wait();
+				v11:SetPrimaryPartCFrame((v11.PrimaryPart.CFrame:Lerp(v17, v18)));
+			end;
+		end);
+		local v19 = v7.AnimationController:LoadAnimation(v7.Souls);
+		v19:Play(0.1, 1, 1);
+		local v20 = false;
+		if (p4.Character.PrimaryPart.Position - v7.PrimaryPart.Position).Magnitude < 70 then
+			v20 = true;
+		end;
+		local v21 = nil;
+		local v22 = nil;
+		local v23 = nil;
+		if v20 == true then
+			v22 = Instance.new("NumberValue", v7);
+			v22.Value = 0.001;
+			v23 = Instance.new("NumberValue", v7);
+			v23.Value = 0.001;
+			v21 = u4.new(Enum.RenderPriority.Camera.Value + 1, function(p5)
+				p5 = p5:Lerp(CFrame.new(), v22.Value);
+				workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame * p5;
+			end);
+			v21:Start();
+			v21:Shake(u4.Presets.Vibration);
+		end;
+		local u5 = 0;
+		local u6 = nil;
+		u6 = v19:GetMarkerReachedSignal("Start"):Connect(function()
+			local v24 = l__ReplicatedStorage__2.KillFX[p1].Sound:Clone();
+			v24.Parent = v7.PrimaryPart;
+			v24:Play();
+			game.Debris:AddItem(v24, 5);
+			local v25 = nil;
+			local v26 = nil;
+			if v20 == true then
+				local v27 = Instance.new("ColorCorrectionEffect");
+				v27.Brightness = 0.375;
+				v27.TintColor = Color3.fromRGB(248, 198, 255);
+				v27.Contrast = 2.25;
+				game.Debris:AddItem(v27, 9);
+				v27.Parent = game.Lighting;
+				l__TweenService__3:Create(v27, TweenInfo.new(8, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+					Brightness = 0, 
+					Contrast = 0, 
+					TintColor = Color3.new(1, 1, 1)
+				}):Play();
+				v25 = Instance.new("ColorCorrectionEffect");
+				game.Debris:AddItem(v25, 9);
+				v25.Parent = game.Lighting;
+				l__TweenService__3:Create(v25, TweenInfo.new(4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+					Brightness = -0.15, 
+					Contrast = 2, 
+					Saturation = -1, 
+					TintColor = Color3.fromRGB(166, 114, 255)
+				}):Play();
+				v26 = Instance.new("ColorCorrectionEffect");
+				game.Debris:AddItem(v26, 9);
+				v26.Parent = game.Lighting;
+			end;
+			v7.Head.Voice:Play();
+			local u7 = nil;
+			u7 = v19:GetMarkerReachedSignal("Swing"):Connect(function()
+				v7.HumanoidRootPart.FistSwing:Play();
+				u7:Disconnect();
+				local v28 = nil;
+				if v20 == true then
+					v28 = u4.new(Enum.RenderPriority.Camera.Value + 2, function(p6)
+						p6 = p6:Lerp(CFrame.new(), v23.Value * 1);
+						workspace.CurrentCamera.CFrame = workspace.CurrentCamera.CFrame * p6;
+					end);
+				end;
+				v7.LeftHand.Dust.Sound:Play();
+				v7.LeftHand.Dust.MN.Enabled = true;
+				local u8 = tick();
+				local u9 = nil;
+				u9 = game["Run Service"].RenderStepped:Connect(function()
+					if tick() - u8 >= 0.9 then
+						u9:Disconnect();
+						v7.LeftHand.Dust.MN.Enabled = false;
+						return;
+					end;
+					local v29 = require(game.ReplicatedStorage.Modules.Xeno);
+					local l__Position__30 = CFrame.new(v7.LeftHand.Position.X, v7.LeftHand.Position.Y + 10, v7.LeftHand.Position.Z).Position;
+					local v31 = {
+						Blast = {
+							DebrisPositions = { l__Position__30, math.random(3, 6), math.random(3, 6) }, 
+							Properties = {
+								Range = math.random(1, 2), 
+								Speed = 0.5, 
+								Duration = math.random(1, 4), 
+								origPos = l__Position__30, 
+								newSize = Vector3.new(math.random(25, 50) / 10, math.random(25, 50) / 10, math.random(25, 50) / 10)
+							}
+						}
+					};
+					local v32 = v29.createCircle(unpack(v31.Blast.DebrisPositions));
+					for v33 = 1, #v32 do
+						local v34 = v29.RayCastOnMap(v32[v33], Vector3.new(0, -40, 0), true);
+						if v34 then
+							v29.spawnRubble(v34.Instance, v34.Position, v31.Blast.Properties, {
+								M = Enum.Material.ForceField, 
+								C = Color3.fromRGB(102, 0, 255)
+							});
+						end;
+					end;
+					task.wait(0.25);
+				end);
+				local u10 = nil;
+				u10 = v19:GetMarkerReachedSignal("End"):Connect(function()
+					u10:Disconnect();
+					task.wait(0.2);
+					if v20 == true then
+						v28:StopSustained(1);
+						v21:StopSustained(1);
+					end;
+					v7.LeftHand.Dust.MN.Enabled = false;
+					v7.HumanoidRootPart.Attachment.RingRelease.Enabled = true;
+					task.delay(0.25, function()
+						v7.HumanoidRootPart.Attachment.RingRelease.Enabled = false;
+					end);
+					for v35, v36 in pairs(v7:GetDescendants()) do
+						if v36.Name ~= "HumanoidRootPart" and v36:IsA("BasePart") and v36.Name ~= "Boy" then
+							game.TweenService:Create(v36, TweenInfo.new(2, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
+								Size = Vector3.new(-50, 20, -50), 
+								Transparency = 1
+							}):Play();
+						elseif (v36:IsA("ParticleEmitter") or v36:IsA("Trail")) and v36.Name ~= "RingRelease" then
+							v36.Enabled = false;
+						end;
+					end;
+					local v37 = l__ReplicatedStorage__2.KillFX[p1].Bye:Clone();
+					v37.Parent = v7.PrimaryPart;
+					v37:Play();
+					game.Debris:AddItem(v37, 5);
+					v19:AdjustSpeed(0);
+					game.Debris:AddItem(v7, 2);
+					if v20 == true then
+						l__TweenService__3:Create(v22, TweenInfo.new(6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+							Value = 1
+						}):Play();
+						l__TweenService__3:Create(v23, TweenInfo.new(6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+							Value = 1
+						}):Play();
+						l__TweenService__3:Create(v25, TweenInfo.new(3, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut), {
+							Brightness = 0, 
+							Contrast = 0, 
+							Saturation = 0, 
+							TintColor = Color3.new(1, 1, 1)
+						}):Play();
+					end;
+				end);
+				task.wait(0.2);
+				if v20 == true then
+					v28:Start();
+					v28:Shake(u4.Presets.BoomDead);
+				end;
+				v19:AdjustSpeed(1.1);
+				v19:AdjustWeight(1.5);
+				if v20 == true then
+					local v38 = Instance.new("ColorCorrectionEffect");
+					game.Debris:AddItem(v38, 2);
+					v38.Brightness = 0.75;
+					v38.TintColor = Color3.fromRGB(248, 198, 255);
+					v38.Contrast = 3;
+					v38.Parent = game.Lighting;
+					l__TweenService__3:Create(v38, TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+						Brightness = 0, 
+						Contrast = 0, 
+						TintColor = Color3.new(1, 1, 1)
+					}):Play();
+				end;
+				v7.Head.fireball2:Emit(100);
+			end);
+			for v39, v40 in pairs(v7:GetDescendants()) do
+				if v40.Name ~= "HumanoidRootPart" and v40:IsA("BasePart") and v40.Name ~= "Boy" then
+					game.TweenService:Create(v40, TweenInfo.new(1, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut), {
+						Size = v8[v40].SF, 
+						Transparency = v8[v40].TF
+					}):Play();
+				end;
+			end;
+			local u11 = nil;
+			u11 = game["Run Service"].RenderStepped:Connect(function(p7)
+				if v26 ~= nil and v20 == true then
+					u5 = u5 + 10000 * p7;
+					v26.Contrast = math.sin(u5) * 0.3 * (1 - v22.Value);
+				end;
+				if v7.Parent == nil then
+					u11:Disconnect();
+					v26:Destroy();
+					return;
+				end;
+				local l__unit__41 = (Vector3.new(p2.Position.X, v7.HumanoidRootPart.Position.Y, p2.Position.Z) - p3.Character.HumanoidRootPart.CFrame * CFrame.new(0, 10, 5.5).Position).unit;
+				local v42 = p3.Character.HumanoidRootPart.CFrame * CFrame.new(0, 10, 5.5).Position + l__unit__41 * 1;
+				v7.PrimaryPart.CFrame = CFrame.new(v42, v42 + l__unit__41);
+			end);
+			u6:Disconnect();
+		end);
+		return nil;
+	end);
+end;
+return v1;
