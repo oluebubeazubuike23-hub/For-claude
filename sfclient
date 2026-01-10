@@ -1,0 +1,1140 @@
+-- StompFrameClient
+-- Place in StarterPlayer > StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local MarketplaceService = game:GetService("MarketplaceService")
+
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local MainScreenGui = PlayerGui:WaitForChild("MainScreenGui")
+
+local StompConfig = require(ReplicatedStorage:WaitForChild("StompConfig"))
+local StompModule = require(ReplicatedStorage:WaitForChild("StompModule"))
+
+-- Remotes
+local StompRemote = ReplicatedStorage:WaitForChild("StompRemote")
+
+-- UI References
+local StompFrameUI = MainScreenGui:WaitForChild("StompFrameUI")
+local MainFrame = StompFrameUI:WaitForChild("MainFrame")
+local Content = MainFrame:WaitForChild("Content")
+local Tabs = MainFrame:WaitForChild("Tabs")
+
+local Pages = {
+	StoredCrates = Content:WaitForChild("StoredCratesPage"),
+	BuyCrates = Content:WaitForChild("BuyCratesPage"),
+	MyStomps = Content:WaitForChild("MyStompsPage"),
+	Trade = Content:WaitForChild("TradePage"),
+	AllStomps = Content:WaitForChild("AllStompsPage")
+}
+
+local CrateOpenModal = StompFrameUI:WaitForChild("CrateOpenModal")
+local TradeWindow = StompFrameUI:WaitForChild("TradeWindow")
+
+-- State
+local CurrentTab = "StoredCrates"
+local PlayerData = {}
+local SelectedTradePlayer = nil
+
+-- =====================
+-- HELPER FUNCTIONS
+-- =====================
+local function UpdateCanvasSize(scrollFrame)
+	local gridLayout = scrollFrame:FindFirstChildOfClass("UIGridLayout")
+	if gridLayout then
+		local contentSize = gridLayout.AbsoluteContentSize
+		scrollFrame.CanvasSize = UDim2.new(0, contentSize.X, 0, contentSize.Y + 20)
+	end
+end
+
+local function SwitchTab(tabName)
+	for name, page in pairs(Pages) do
+		page.Visible = (name == tabName)
+	end
+
+	for _, button in pairs(Tabs:GetChildren()) do
+		if button:IsA("TextButton") then
+			local isActive = button.Name == tabName .. "Tab"
+			button.BackgroundColor3 = isActive and Color3.fromRGB(60, 60, 60) or Color3.fromRGB(40, 40, 40)
+		end
+	end
+
+	CurrentTab = tabName
+end
+
+local function CreateStompCard(parent, stompName, data)
+	local card = Instance.new("Frame")
+	card.Name = stompName
+	card.Size = UDim2.new(0, 150, 0, 180)
+	card.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	card.BorderSizePixel = 0
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = card
+
+	local icon = Instance.new("ImageLabel")
+	icon.Name = "Icon"
+	icon.Size = UDim2.new(1, -20, 0, 100)
+	icon.Position = UDim2.new(0, 10, 0, 10)
+	icon.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	icon.BorderSizePixel = 0
+	icon.Image = data.Icon or "rbxassetid://11785402571"
+	icon.Parent = card
+
+	local iconCorner = Instance.new("UICorner")
+	iconCorner.CornerRadius = UDim.new(0, 6)
+	iconCorner.Parent = icon
+
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Name = "NameLabel"
+	nameLabel.Size = UDim2.new(1, -20, 0, 30)
+	nameLabel.Position = UDim2.new(0, 10, 0, 115)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = stompName
+	nameLabel.TextColor3 = Color3.new(1, 1, 1)
+	nameLabel.TextScaled = true
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.Parent = card
+
+	local rarityLabel = Instance.new("TextLabel")
+	rarityLabel.Name = "RarityLabel"
+	rarityLabel.Size = UDim2.new(1, -20, 0, 20)
+	rarityLabel.Position = UDim2.new(0, 10, 0, 145)
+	rarityLabel.BackgroundTransparency = 1
+	rarityLabel.Text = data.Rarity or "Common"
+	rarityLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+	rarityLabel.TextSize = 14
+	rarityLabel.Font = Enum.Font.Gotham
+	rarityLabel.Parent = card
+
+	card.Parent = parent
+	return card
+end
+
+local function CreateCrateCard(parent, crateName, count)
+	local card = Instance.new("Frame")
+	card.Name = crateName
+	card.Size = UDim2.new(0, 150, 0, 180)
+	card.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	card.BorderSizePixel = 0
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = card
+
+	local icon = Instance.new("ImageLabel")
+	icon.Size = UDim2.new(1, -20, 0, 100)
+	icon.Position = UDim2.new(0, 10, 0, 10)
+	icon.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	icon.BorderSizePixel = 0
+	icon.Image = "rbxassetid://11785402571" -- Replace with crate images
+	icon.Parent = card
+
+	local iconCorner = Instance.new("UICorner")
+	iconCorner.CornerRadius = UDim.new(0, 6)
+	iconCorner.Parent = icon
+
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.new(1, -20, 0, 25)
+	nameLabel.Position = UDim2.new(0, 10, 0, 115)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = crateName .. " Crate"
+	nameLabel.TextColor3 = Color3.new(1, 1, 1)
+	nameLabel.TextScaled = true
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.Parent = card
+
+	local countLabel = Instance.new("TextLabel")
+	countLabel.Size = UDim2.new(1, -20, 0, 20)
+	countLabel.Position = UDim2.new(0, 10, 0, 140)
+	countLabel.BackgroundTransparency = 1
+	countLabel.Text = "x" .. count
+	countLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	countLabel.TextSize = 16
+	countLabel.Font = Enum.Font.Gotham
+	countLabel.Parent = card
+
+	local openButton = Instance.new("TextButton")
+	openButton.Name = "OpenButton"
+	openButton.Size = UDim2.new(1, -20, 0, 30)
+	openButton.Position = UDim2.new(0, 10, 1, -40)
+	openButton.BackgroundColor3 = count > 0 and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(100, 100, 100)
+	openButton.Text = "OPEN"
+	openButton.TextColor3 = Color3.new(1, 1, 1)
+	openButton.TextSize = 18
+	openButton.Font = Enum.Font.GothamBold
+	openButton.Parent = card
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 6)
+	btnCorner.Parent = openButton
+
+	openButton.Activated:Connect(function()
+		if count > 0 then
+			OpenCrate(crateName)
+		end
+	end)
+
+	card.Parent = parent
+	return card
+end
+
+-- =====================
+-- PAGE POPULATION
+-- =====================
+
+function RefreshStoredCrates()
+	-- Clear existing cards
+	for _, child in pairs(Pages.StoredCrates:GetChildren()) do
+		if child:IsA("Frame") and not child:IsA("UIGridLayout") then
+			child:Destroy()
+		end
+	end
+
+	if PlayerData.Crates then
+		for crateName, count in pairs(PlayerData.Crates) do
+			CreateCrateCard(Pages.StoredCrates, crateName, count)
+		end
+	end
+	UpdateCanvasSize(Pages.StoredCrates)
+end
+
+function RefreshBuyCrates()
+	-- Clear existing cards
+	for _, child in pairs(Pages.BuyCrates:GetChildren()) do
+		if child:IsA("Frame") and not child:IsA("UIGridLayout") then
+			child:Destroy()
+		end
+	end
+
+	for crateName, priceData in pairs(StompConfig.CratePrices) do
+		local card = Instance.new("Frame")
+		card.Name = crateName
+		card.Size = UDim2.new(0, 150, 0, 180)
+		card.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+		card.BorderSizePixel = 0
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 8)
+		corner.Parent = card
+
+		local icon = Instance.new("ImageLabel")
+		icon.Size = UDim2.new(1, -20, 0, 100)
+		icon.Position = UDim2.new(0, 10, 0, 10)
+		icon.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		icon.BorderSizePixel = 0
+		icon.Image = "rbxassetid://11785402571"
+		icon.Parent = card
+
+		local iconCorner = Instance.new("UICorner")
+		iconCorner.CornerRadius = UDim.new(0, 6)
+		iconCorner.Parent = icon
+
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.Size = UDim2.new(1, -20, 0, 25)
+		nameLabel.Position = UDim2.new(0, 10, 0, 115)
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Text = crateName .. " Crate"
+		nameLabel.TextColor3 = Color3.new(1, 1, 1)
+		nameLabel.TextScaled = true
+		nameLabel.Font = Enum.Font.GothamBold
+		nameLabel.Parent = card
+
+		local priceLabel = Instance.new("TextLabel")
+		priceLabel.Size = UDim2.new(1, -20, 0, 20)
+		priceLabel.Position = UDim2.new(0, 10, 0, 140)
+		priceLabel.BackgroundTransparency = 1
+		priceLabel.Text = priceData.Price .. " Robux"
+		priceLabel.TextColor3 = Color3.fromRGB(0, 200, 0)
+		priceLabel.TextSize = 16
+		priceLabel.Font = Enum.Font.Gotham
+		priceLabel.Parent = card
+
+		local buyButton = Instance.new("TextButton")
+		buyButton.Size = UDim2.new(1, -20, 0, 30)
+		buyButton.Position = UDim2.new(0, 10, 1, -40)
+		buyButton.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+		buyButton.Text = "BUY"
+		buyButton.TextColor3 = Color3.new(1, 1, 1)
+		buyButton.TextSize = 18
+		buyButton.Font = Enum.Font.GothamBold
+		buyButton.Parent = card
+
+		local btnCorner = Instance.new("UICorner")
+		btnCorner.CornerRadius = UDim.new(0, 6)
+		btnCorner.Parent = buyButton
+
+		buyButton.Activated:Connect(function()
+			if priceData.ProductId and priceData.ProductId > 0 then
+				MarketplaceService:PromptProductPurchase(Player, priceData.ProductId)
+			else
+				warn("[CRATE PURCHASE] Missing ProductId for", crateName)
+			end
+		end)
+
+		card.Parent = Pages.BuyCrates
+	end
+
+	UpdateCanvasSize(Pages.BuyCrates)
+end
+
+	function RefreshMyStomps()
+		-- Clear existing cards
+		for _, child in pairs(Pages.MyStomps:GetChildren()) do
+			if child:IsA("Frame") and not child:IsA("UIGridLayout") then
+				child:Destroy()
+			end
+		end
+
+		if PlayerData.OwnedStomps then
+			for _, stompName in pairs(PlayerData.OwnedStomps) do
+				local data = StompModule[stompName] or {}
+				local card = CreateStompCard(Pages.MyStomps, stompName, data)
+
+				local equipButton = Instance.new("TextButton")
+				equipButton.Name = "EquipButton"
+				equipButton.Size = UDim2.new(1, -20, 0, 30)
+				equipButton.Position = UDim2.new(0, 10, 1, -40)
+				equipButton.BackgroundColor3 = (PlayerData.EquippedStomp == stompName) and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(60, 60, 60)
+				equipButton.Text = (PlayerData.EquippedStomp == stompName) and "EQUIPPED" or "EQUIP"
+				equipButton.TextColor3 = Color3.new(1, 1, 1)
+				equipButton.TextSize = 16
+				equipButton.Font = Enum.Font.GothamBold
+				equipButton.Parent = card
+
+				local btnCorner = Instance.new("UICorner")
+				btnCorner.CornerRadius = UDim.new(0, 6)
+				btnCorner.Parent = equipButton
+
+				equipButton.Activated:Connect(function()
+					StompRemote:FireServer("EquipStomp", stompName)
+				end)
+			end
+		end
+
+		UpdateCanvasSize(Pages.MyStomps)
+	end
+
+
+	if PlayerData.OwnedStomps then
+		for _, stompName in pairs(PlayerData.OwnedStomps) do
+			local data = StompModule[stompName] or {}
+			local card = CreateStompCard(Pages.MyStomps, stompName, data)
+
+			local equipButton = Instance.new("TextButton")
+			equipButton.Name = "EquipButton"
+			equipButton.Size = UDim2.new(1, -20, 0, 30)
+			equipButton.Position = UDim2.new(0, 10, 1, -40)
+			equipButton.BackgroundColor3 = (PlayerData.EquippedStomp == stompName) and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(60, 60, 60)
+			equipButton.Text = (PlayerData.EquippedStomp == stompName) and "EQUIPPED" or "EQUIP"
+			equipButton.TextColor3 = Color3.new(1, 1, 1)
+			equipButton.TextSize = 16
+			equipButton.Font = Enum.Font.GothamBold
+			equipButton.Parent = card
+
+
+			local btnCorner = Instance.new("UICorner")
+			btnCorner.CornerRadius = UDim.new(0, 6)
+			btnCorner.Parent = equipButton
+
+			equipButton.Activated:Connect(function()
+				StompRemote:FireServer("EquipStomp", stompName)
+			end)
+		end
+	end
+
+function RefreshAllStomps()
+	-- Clear existing cards
+	function RefreshAllStomps()
+		-- Clear existing cards
+		for _, child in pairs(Pages.AllStomps:GetChildren()) do
+			if child:IsA("Frame") and not child:IsA("UIGridLayout") then
+				child:Destroy()
+			end
+		end
+
+		for stompName, data in pairs(StompModule) do
+			local card = CreateStompCard(Pages.AllStomps, stompName, data)
+
+			local chanceLabel = Instance.new("TextLabel")
+			chanceLabel.Size = UDim2.new(1, -20, 0, 20)
+			chanceLabel.Position = UDim2.new(0, 10, 1, -25)
+			chanceLabel.BackgroundTransparency = 1
+			chanceLabel.Text = (StompConfig.StompDisplayChances[stompName] or 0) .. "%"
+			chanceLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+			chanceLabel.TextSize = 14
+			chanceLabel.Font = Enum.Font.GothamBold
+			chanceLabel.Parent = card
+
+			local owned = PlayerData.OwnedStomps and table.find(PlayerData.OwnedStomps, stompName)
+			if not owned then
+				local lock = Instance.new("ImageLabel")
+				lock.Name = "LockOverlay"
+				lock.Size = UDim2.new(1, 0, 1, 0)
+				lock.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+				lock.BackgroundTransparency = 0.6
+				lock.BorderSizePixel = 0
+				lock.Image = "rbxassetid://5743022869"
+				lock.ImageColor3 = Color3.fromRGB(255, 50, 50)
+				lock.ScaleType = Enum.ScaleType.Fit
+				lock.Parent = card
+
+				local lockCorner = Instance.new("UICorner")
+				lockCorner.CornerRadius = UDim.new(0, 8)
+				lockCorner.Parent = lock
+			end
+		end
+
+		UpdateCanvasSize(Pages.AllStomps)
+	end
+
+
+	for stompName, data in pairs(StompModule) do
+		local card = CreateStompCard(Pages.AllStomps, stompName, data)
+
+		local chanceLabel = Instance.new("TextLabel")
+		chanceLabel.Size = UDim2.new(1, -20, 0, 20)
+		chanceLabel.Position = UDim2.new(0, 10, 1, -25)
+		chanceLabel.BackgroundTransparency = 1
+		chanceLabel.Text = (StompConfig.StompDisplayChances[stompName] or 0) .. "%"
+		chanceLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+		chanceLabel.TextSize = 14
+		chanceLabel.Font = Enum.Font.GothamBold
+		chanceLabel.Parent = card
+
+		local owned = PlayerData.OwnedStomps and table.find(PlayerData.OwnedStomps, stompName)
+
+		if not owned then
+			local lock = Instance.new("ImageLabel")
+			lock.Name = "LockOverlay"
+			lock.Size = UDim2.new(1, 0, 1, 0)
+			lock.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+			lock.BackgroundTransparency = 0.6
+			lock.BorderSizePixel = 0
+			lock.Image = "rbxassetid://5743022869"
+			lock.ImageColor3 = Color3.fromRGB(255, 50, 50)
+			lock.ScaleType = Enum.ScaleType.Fit
+			lock.Parent = card
+
+			local lockCorner = Instance.new("UICorner")
+			lockCorner.CornerRadius = UDim.new(0, 8)
+			lockCorner.Parent = lock
+		end
+	end
+end
+
+-- =====================
+-- CRATE OPENING
+-- =====================
+
+function OpenCrate(crateName)
+	CrateOpenModal.Visible = true
+	CrateOpenModal.CrateImage.Image = "rbxassetid://11785402571" -- Replace with actual crate image
+
+	local spinFrame = CrateOpenModal:FindFirstChild("SpinFrame")
+	local scrollFrame = spinFrame and spinFrame:FindFirstChild("ScrollingFrame")
+
+	if not scrollFrame then return end
+
+	-- Clear previous items
+	for _, child in pairs(scrollFrame:GetChildren()) do
+		if child:IsA("Frame") then
+			child:Destroy()
+		end
+	end
+
+	-- Request roll from server
+	StompRemote:FireServer("OpenCrate", crateName)
+end
+
+StompRemote.OnClientEvent:Connect(function(action, ...)
+	StompRemote.OnClientEvent:Connect(function(action, ...)
+		if action == "CrateResult" then
+			local result = ...
+			AnimateCrateOpening(result)
+		elseif action == "OpponentOffer" then
+			local fromPlayer, stompName = ...
+			TheirOffer = stompName
+
+			-- Display stomp name as text
+			local label = ThemOfferSlot:FindFirstChild("OfferText")
+			if not label then
+				label = Instance.new("TextLabel")
+				label.Name = "OfferText"
+				label.Size = UDim2.new(1, 0, 1, 0)
+				label.BackgroundTransparency = 1
+				label.TextColor3 = Color3.new(1, 1, 1)
+				label.TextSize = 18
+				label.Font = Enum.Font.GothamBold
+				label.TextWrapped = true
+				label.Parent = ThemOfferSlot
+			end
+			label.Text = stompName
+			ThemOfferSlot.Image = ""
+		elseif action == "OtherAccepted" then
+			local fromPlayer, theirOffer = ...
+			TheyAccepted = true
+			TheirOffer = theirOffer
+
+			-- Show ACCEPTED on their side
+			local acceptedLabel = TradeWindow.ThemPanel:FindFirstChild("AcceptedLabel")
+			if not acceptedLabel then
+				acceptedLabel = Instance.new("TextLabel")
+				acceptedLabel.Name = "AcceptedLabel"
+				acceptedLabel.Size = UDim2.new(1, 0, 0, 60)
+				acceptedLabel.Position = UDim2.new(0, 0, 0.4, 0)
+				acceptedLabel.BackgroundTransparency = 1
+				acceptedLabel.Text = "ACCEPTED"
+				acceptedLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+				acceptedLabel.TextSize = 32
+				acceptedLabel.Font = Enum.Font.GothamBold
+				acceptedLabel.TextStrokeTransparency = 0
+				acceptedLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+				acceptedLabel.ZIndex = 10
+				acceptedLabel.Parent = TradeWindow.ThemPanel
+			end
+			acceptedLabel.Visible = true
+
+			if IAccepted then
+				StartTradeCountdown()
+			end
+
+	elseif action == "UpdateData" then
+		PlayerData = ...
+		RefreshStoredCrates()
+		RefreshMyStomps()
+		RefreshAllStomps()
+
+	elseif action == "TradeRequest" then
+		local fromPlayer = ...
+		ShowTradeRequestPopup(fromPlayer)
+
+	elseif action == "TradeAccepted" then
+		local otherPlayer = ...
+		OpenTradeWindow(otherPlayer)
+
+		elseif action == "TradeDeclined" then
+			local fromPlayer = ...
+
+			-- Show decline message
+			CountdownLabel.Visible = true
+			CountdownLabel.Text = (fromPlayer and fromPlayer.DisplayName or "Other player") .. " declined the trade"
+			CountdownLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+			CountdownLabel.TextSize = 28
+
+			wait(2)
+			TradeWindow.Visible = false
+			ResetTradeWindow()
+
+	elseif action == "TradeComplete" then
+		TradeWindow.Visible = false
+		RefreshMyStomps()
+
+	elseif action == "OtherAccepted" then
+		TheyAccepted = true
+		TheirOffer = ...
+		ThemOfferSlot.Image = "rbxassetid://11785402571"
+
+		if IAccepted then
+			StartTradeCountdown()
+		end
+	end
+end)
+
+
+function AnimateCrateOpening(result)
+	local spinFrame = CrateOpenModal:FindFirstChild("SpinFrame")
+	local scrollFrame = spinFrame and spinFrame:FindFirstChild("ScrollingFrame")
+
+	if not scrollFrame then return end
+
+	-- Generate fake items + real result at position 18
+	local items = {}
+	for i = 1, 30 do
+		if i == 18 then
+			table.insert(items, result)
+		else
+			-- Random stomp from pool
+			local randomRarity = StompConfig.StompPool.Common[1] -- Simplified
+			table.insert(items, randomRarity)
+		end
+	end
+
+	-- Create item frames
+	for i, stompName in ipairs(items) do
+		local item = Instance.new("Frame")
+		item.Size = UDim2.new(0, 100, 0, 120)
+		item.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		item.BorderSizePixel = 0
+
+		local icon = Instance.new("ImageLabel")
+		icon.Size = UDim2.new(1, -10, 0, 80)
+		icon.Position = UDim2.new(0, 5, 0, 5)
+		icon.BackgroundTransparency = 1
+		icon.Image = "rbxassetid://11785402571"
+		icon.Parent = item
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 0, 30)
+		label.Position = UDim2.new(0, 0, 1, -35)
+		label.BackgroundTransparency = 1
+		label.Text = stompName
+		label.TextColor3 = Color3.new(1, 1, 1)
+		label.TextScaled = true
+		label.Font = Enum.Font.Gotham
+		label.Parent = item
+
+		item.Parent = scrollFrame
+	end
+
+	-- Animate scroll
+	local targetPos = -(18 * 110) + (scrollFrame.AbsoluteSize.X / 2) - 55
+	local tween = TweenService:Create(scrollFrame, TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		CanvasPosition = Vector2.new(-targetPos, 0)
+	})
+	tween:Play()
+
+	tween.Completed:Wait()
+
+	-- Show result for 2 seconds
+	wait(2)
+	CrateOpenModal.Visible = false
+end
+
+-- =====================
+-- TAB SETUP
+-- =====================
+
+for _, button in pairs(Tabs:GetChildren()) do
+	if button:IsA("TextButton") then
+		button.Activated:Connect(function()
+			local tabName = button.Name:gsub("Tab", "")
+			SwitchTab(tabName)
+		end)
+	end
+end
+
+MainFrame.CloseButton.Activated:Connect(function()
+	StompFrameUI.Enabled = false
+end)
+-- =====================
+-- TRADE SYSTEM
+-- =====================
+
+local TradePage = Pages.Trade
+local SelectUserButton = TradePage:FindFirstChild("SelectUserButton")
+local PlayerList = TradePage:FindFirstChild("PlayerList")
+local PlayerListVisible = false
+
+-- Player selection
+if SelectUserButton and PlayerList then
+	SelectUserButton.Activated:Connect(function()
+		PlayerListVisible = not PlayerListVisible
+		PlayerList.Visible = PlayerListVisible
+
+		if PlayerListVisible then
+			RefreshPlayerList()
+		end
+	end)
+end
+
+function RefreshPlayerList()
+	-- Clear existing players
+	for _, child in pairs(PlayerList:GetChildren()) do
+		if child:IsA("Frame") and not child:IsA("UIListLayout") then
+			child:Destroy()
+		end
+	end
+
+	-- Add all players except self
+	for _, player in pairs(Players:GetPlayers()) do
+		if player ~= Player then
+			local playerCard = Instance.new("Frame")
+			playerCard.Name = player.Name
+			playerCard.Size = UDim2.new(1, -10, 0, 50)
+			playerCard.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+			playerCard.BorderSizePixel = 0
+
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0, 6)
+			corner.Parent = playerCard
+
+			local nameLabel = Instance.new("TextLabel")
+			nameLabel.Size = UDim2.new(0.7, 0, 1, 0)
+			nameLabel.Position = UDim2.new(0, 10, 0, 0)
+			nameLabel.BackgroundTransparency = 1
+			nameLabel.Text = player.DisplayName .. " (@" .. player.Name .. ")"
+			nameLabel.TextColor3 = Color3.new(1, 1, 1)
+			nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+			nameLabel.Font = Enum.Font.Gotham
+			nameLabel.TextSize = 16
+			nameLabel.Parent = playerCard
+
+			local tradeButton = Instance.new("TextButton")
+			tradeButton.Name = "TradeButton"
+			tradeButton.Size = UDim2.new(0.25, -10, 0.7, 0)
+			tradeButton.Position = UDim2.new(0.73, 0, 0.15, 0)
+			tradeButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+			tradeButton.Text = "TRADE"
+			tradeButton.TextColor3 = Color3.new(1, 1, 1)
+			tradeButton.TextSize = 14
+			tradeButton.Font = Enum.Font.GothamBold
+			tradeButton.Parent = playerCard
+
+			local btnCorner = Instance.new("UICorner")
+			btnCorner.CornerRadius = UDim.new(0, 4)
+			btnCorner.Parent = tradeButton
+
+			-- Highlight on select
+			local stroke = Instance.new("UIStroke")
+			stroke.Color = Color3.fromRGB(0, 200, 0)
+			stroke.Thickness = 0
+			stroke.Parent = playerCard
+
+			tradeButton.Activated:Connect(function()
+				-- Unhighlight all
+				for _, card in pairs(PlayerList:GetChildren()) do
+					if card:IsA("Frame") then
+						local s = card:FindFirstChild("UIStroke")
+						if s then s.Thickness = 0 end
+					end
+				end
+
+				-- Highlight selected
+				stroke.Thickness = 3
+				SelectedTradePlayer = player
+			end)
+
+			playerCard.Parent = PlayerList
+		end
+	end
+end
+
+-- Trade buttons
+local SendTradeButton = Instance.new("TextButton")
+SendTradeButton.Name = "SendTradeButton"
+SendTradeButton.Size = UDim2.new(0.35, 0, 0, 50)
+SendTradeButton.Position = UDim2.new(0.1, 0, 0.92, 0)
+SendTradeButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+SendTradeButton.Text = "SEND TRADE REQUEST"
+SendTradeButton.TextColor3 = Color3.new(1, 1, 1)
+SendTradeButton.TextSize = 16
+SendTradeButton.Font = Enum.Font.GothamBold
+SendTradeButton.Parent = TradePage
+
+local sendCorner = Instance.new("UICorner")
+sendCorner.CornerRadius = UDim.new(0, 6)
+sendCorner.Parent = SendTradeButton
+
+local CancelButton = Instance.new("TextButton")
+CancelButton.Name = "CancelButton"
+CancelButton.Size = UDim2.new(0.35, 0, 0, 50)
+CancelButton.Position = UDim2.new(0.55, 0, 0.92, 0)
+CancelButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CancelButton.Text = "CANCEL"
+CancelButton.TextColor3 = Color3.new(1, 1, 1)
+CancelButton.TextSize = 16
+CancelButton.Font = Enum.Font.GothamBold
+CancelButton.Parent = TradePage
+
+local cancelCorner = Instance.new("UICorner")
+cancelCorner.CornerRadius = UDim.new(0, 6)
+cancelCorner.Parent = CancelButton
+
+SendTradeButton.Activated:Connect(function()
+	if SelectedTradePlayer then
+		StompRemote:FireServer("SendTradeRequest", SelectedTradePlayer)
+		PlayerList.Visible = false
+		PlayerListVisible = false
+		SelectedTradePlayer = nil
+	end
+end)
+
+CancelButton.Activated:Connect(function()
+	-- Unhighlight all
+	for _, card in pairs(PlayerList:GetChildren()) do
+		if card:IsA("Frame") then
+			local s = card:FindFirstChild("UIStroke")
+			if s then s.Thickness = 0 end
+		end
+	end
+	SelectedTradePlayer = nil
+	PlayerList.Visible = false
+	PlayerListVisible = false
+end)
+
+-- Trade request popup
+function ShowTradeRequestPopup(fromPlayer)
+	-- Create global notification at top of screen
+	local popup = Instance.new("Frame")
+	popup.Name = "TradeRequestPopup"
+	popup.Size = UDim2.new(0, 450, 0, 120)
+	popup.Position = UDim2.new(0.5, -225, 0, 20)
+	popup.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	popup.BorderSizePixel = 0
+	popup.ZIndex = 500
+	popup.Parent = MainScreenGui -- Parent to MainScreenGui, not StompFrameUI
+
+	-- Add drop shadow effect
+	local shadow = Instance.new("UIStroke")
+	shadow.Color = Color3.fromRGB(0, 0, 0)
+	shadow.Thickness = 3
+	shadow.Transparency = 0.5
+	shadow.Parent = popup
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 12)
+	corner.Parent = popup
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, -20, 0, 40)
+	title.Position = UDim2.new(0, 10, 0, 10)
+	title.BackgroundTransparency = 1
+	title.Text = fromPlayer.DisplayName .. " sent you a trade request"
+	title.TextColor3 = Color3.new(1, 1, 1)
+	title.TextSize = 18
+	title.Font = Enum.Font.GothamBold
+	title.TextWrapped = true
+	title.Parent = popup
+
+	local acceptBtn = Instance.new("TextButton")
+	acceptBtn.Size = UDim2.new(0.45, 0, 0, 45)
+	acceptBtn.Position = UDim2.new(0.05, 0, 0.55, 0)
+	acceptBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+	acceptBtn.Text = "ACCEPT"
+	acceptBtn.TextColor3 = Color3.new(1, 1, 1)
+	acceptBtn.TextSize = 16
+	acceptBtn.Font = Enum.Font.GothamBold
+	acceptBtn.Parent = popup
+
+	local acceptCorner = Instance.new("UICorner")
+	acceptCorner.CornerRadius = UDim.new(0, 6)
+	acceptCorner.Parent = acceptBtn
+
+	local declineBtn = Instance.new("TextButton")
+	declineBtn.Size = UDim2.new(0.45, 0, 0, 45)
+	declineBtn.Position = UDim2.new(0.5, 0, 0.55, 0)
+	declineBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	declineBtn.Text = "DECLINE"
+	declineBtn.TextColor3 = Color3.new(1, 1, 1)
+	declineBtn.TextSize = 16
+	declineBtn.Font = Enum.Font.GothamBold
+	declineBtn.Parent = popup
+
+	local declineCorner = Instance.new("UICorner")
+	declineCorner.CornerRadius = UDim.new(0, 6)
+	declineCorner.Parent = declineBtn
+
+	acceptBtn.Activated:Connect(function()
+		StompRemote:FireServer("AcceptTradeRequest", fromPlayer)
+		popup:Destroy()
+		-- Open trade window
+		OpenTradeWindow(fromPlayer)
+	end)
+
+	declineBtn.Activated:Connect(function()
+		StompRemote:FireServer("DeclineTrade", fromPlayer)
+		popup:Destroy()
+	end)
+
+	-- Auto-dismiss after 30 seconds
+	delay(30, function()
+		if popup.Parent then
+			popup:Destroy()
+		end
+	end)
+end
+
+-- Trade window logic
+local YouOfferSlot = TradeWindow.YouPanel.OfferSlot
+local ThemOfferSlot = TradeWindow.ThemPanel.OfferSlot
+local AcceptButton = TradeWindow.AcceptButton
+local DeclineButton = TradeWindow.DeclineButton
+local CountdownLabel = TradeWindow.CountdownLabel
+
+local MyOffer = nil
+local TheirOffer = nil
+local OtherPlayer = nil
+local IAccepted = false
+local TheyAccepted = false
+
+function OpenTradeWindow(otherPlayer)
+	TradeWindow.Visible = true
+	OtherPlayer = otherPlayer
+	MyOffer = nil
+	TheirOffer = nil
+	IAccepted = false
+	TheyAccepted = false
+
+	YouOfferSlot.Image = ""
+	ThemOfferSlot.Image = ""
+	AcceptButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+	AcceptButton.Text = "ACCEPT"
+	CountdownLabel.Visible = false
+
+	-- Allow selecting from owned stomps
+		YouOfferSlot.Activated:Connect(function()
+			if not IAccepted then
+				ShowStompSelector(function(stompName)
+					MyOffer = stompName
+
+					-- Display as text, not image
+					local label = YouOfferSlot:FindFirstChild("OfferText")
+					if not label then
+						label = Instance.new("TextLabel")
+						label.Name = "OfferText"
+						label.Size = UDim2.new(1, 0, 1, 0)
+						label.BackgroundTransparency = 1
+						label.TextColor3 = Color3.new(1, 1, 1)
+						label.TextSize = 18
+						label.Font = Enum.Font.GothamBold
+						label.TextWrapped = true
+						label.Parent = YouOfferSlot
+					end
+					label.Text = stompName
+					YouOfferSlot.Image = ""
+				end)
+			end
+		end)
+
+function ShowStompSelector(callback)
+	local selector = Instance.new("Frame")
+	selector.Name = "StompSelector"
+	selector.Size = UDim2.new(0, 400, 0, 500)
+	selector.Position = UDim2.new(0.5, -200, 0.5, -250)
+	selector.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	selector.BorderSizePixel = 0
+	selector.ZIndex = 200
+	selector.Parent = StompFrameUI
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 12)
+	corner.Parent = selector
+
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, 0, 0, 40)
+	title.BackgroundTransparency = 1
+	title.Text = "Select Stomp to Offer"
+	title.TextColor3 = Color3.new(1, 1, 1)
+	title.TextSize = 20
+	title.Font = Enum.Font.GothamBold
+	title.Parent = selector
+
+	local scrollFrame = Instance.new("ScrollingFrame")
+	scrollFrame.Size = UDim2.new(1, -20, 1, -100)
+	scrollFrame.Position = UDim2.new(0, 10, 0, 50)
+	scrollFrame.BackgroundTransparency = 1
+	scrollFrame.ScrollBarThickness = 6
+	scrollFrame.Parent = selector
+
+	local grid = Instance.new("UIGridLayout")
+	grid.CellSize = UDim2.new(0, 100, 0, 120)
+	grid.CellPadding = UDim2.new(0, 10, 0, 10)
+	grid.Parent = scrollFrame
+
+	if PlayerData.OwnedStomps then
+		for _, stompName in pairs(PlayerData.OwnedStomps) do
+			local btn = Instance.new("TextButton")
+			btn.Size = UDim2.new(1, 0, 1, 0)
+			btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+			btn.Text = stompName
+			btn.TextColor3 = Color3.new(1, 1, 1)
+			btn.TextScaled = true
+			btn.Font = Enum.Font.Gotham
+			btn.Parent = scrollFrame
+
+			local btnCorner = Instance.new("UICorner")
+			btnCorner.Parent = btn
+
+			btn.Activated:Connect(function()
+				callback(stompName)
+				selector:Destroy()
+
+				-- Notify server to sync offer
+				if OtherPlayer then
+					StompRemote:FireServer("UpdateTradeOffer", OtherPlayer, stompName)
+				end
+			end)
+		end
+	end
+
+	local closeBtn = Instance.new("TextButton")
+	closeBtn.Size = UDim2.new(0.8, 0, 0, 40)
+	closeBtn.Position = UDim2.new(0.1, 0, 1, -50)
+	closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	closeBtn.Text = "CLOSE"
+	closeBtn.TextColor3 = Color3.new(1, 1, 1)
+	closeBtn.Font = Enum.Font.GothamBold
+	closeBtn.Parent = selector
+
+	closeBtn.Activated:Connect(function()
+		selector:Destroy()
+	end)
+end
+
+		AcceptButton.Activated:Connect(function()
+			if not MyOffer then
+				-- Show error message
+				local errorLabel = TradeWindow:FindFirstChild("ErrorLabel")
+				if not errorLabel then
+					errorLabel = Instance.new("TextLabel")
+					errorLabel.Name = "ErrorLabel"
+					errorLabel.Size = UDim2.new(1, 0, 0, 40)
+					errorLabel.Position = UDim2.new(0, 0, 0, -45)
+					errorLabel.BackgroundTransparency = 1
+					errorLabel.Text = "You must select a stomp to offer!"
+					errorLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+					errorLabel.TextSize = 18
+					errorLabel.Font = Enum.Font.GothamBold
+					errorLabel.Parent = TradeWindow
+				end
+				errorLabel.Visible = true
+				delay(3, function()
+					errorLabel.Visible = false
+				end)
+				return
+			end
+
+			IAccepted = true
+			AcceptButton.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+			AcceptButton.Text = "ACCEPTED"
+
+			-- Show ACCEPTED on my side
+			local acceptedLabel = TradeWindow.YouPanel:FindFirstChild("AcceptedLabel")
+			if not acceptedLabel then
+				acceptedLabel = Instance.new("TextLabel")
+				acceptedLabel.Name = "AcceptedLabel"
+				acceptedLabel.Size = UDim2.new(1, 0, 0, 60)
+				acceptedLabel.Position = UDim2.new(0, 0, 0.4, 0)
+				acceptedLabel.BackgroundTransparency = 1
+				acceptedLabel.Text = "ACCEPTED"
+				acceptedLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+				acceptedLabel.TextSize = 32
+				acceptedLabel.Font = Enum.Font.GothamBold
+				acceptedLabel.TextStrokeTransparency = 0
+				acceptedLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+				acceptedLabel.ZIndex = 10
+				acceptedLabel.Parent = TradeWindow.YouPanel
+			end
+			acceptedLabel.Visible = true
+
+			-- Notify server
+			StompRemote:FireServer("MarkAccepted", OtherPlayer, MyOffer)
+
+			-- Check if both accepted
+			if TheyAccepted then
+				StartTradeCountdown()
+			end
+		end)
+
+		DeclineButton.Activated:Connect(function()
+			StompRemote:FireServer("DeclineTrade", OtherPlayer)
+
+			-- Show decline message
+			CountdownLabel.Visible = true
+			CountdownLabel.Text = "You declined the trade"
+			CountdownLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+			CountdownLabel.TextSize = 32
+
+			wait(2)
+			TradeWindow.Visible = false
+			ResetTradeWindow()
+		end)
+
+		function StartTradeCountdown()
+			-- Lock both panels
+			YouOfferSlot.Active = false
+			AcceptButton.Visible = false
+			DeclineButton.Visible = false
+
+			-- Show countdown
+			CountdownLabel.Visible = true
+			CountdownLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+			for i = 3, 1, -1 do
+				CountdownLabel.Text = tostring(i)
+				wait(1)
+			end
+
+			-- Show big ACCEPTED
+			CountdownLabel.Text = "TRADE COMPLETE!"
+			CountdownLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+			CountdownLabel.TextSize = 48
+
+			-- Complete trade on server
+			StompRemote:FireServer("CompleteTrade", OtherPlayer, MyOffer, TheirOffer)
+
+			wait(2)
+
+			-- Close window
+			TradeWindow.Visible = false
+			ResetTradeWindow()
+		end
+
+		function ResetTradeWindow()
+			MyOffer = nil
+			TheirOffer = nil
+			IAccepted = false
+			TheyAccepted = false
+
+			YouOfferSlot.Active = true
+			AcceptButton.Visible = true
+			DeclineButton.Visible = true
+			AcceptButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+			AcceptButton.Text = "ACCEPT"
+			CountdownLabel.Visible = false
+			CountdownLabel.TextSize = 48
+
+			local youLabel = TradeWindow.YouPanel:FindFirstChild("AcceptedLabel")
+			if youLabel then youLabel.Visible = false end
+
+			local themLabel = TradeWindow.ThemPanel:FindFirstChild("AcceptedLabel")
+			if themLabel then themLabel.Visible = false end
+
+			local youOffer = YouOfferSlot:FindFirstChild("OfferText")
+			if youOffer then youOffer.Text = "" end
+
+			local themOffer = ThemOfferSlot:FindFirstChild("OfferText")
+			if themOffer then themOffer.Text = "" end
+		end
+
+-- Listen for other player accepting
+StompRemote.OnClientEvent:Connect(function(action, ...)
+	-- ... existing code ...
+
+	if action == "OtherAccepted" then
+		TheyAccepted = true
+		TheirOffer = ...
+		ThemOfferSlot.Image = "rbxassetid://11785402571"
+
+		if IAccepted then
+			StartTradeCountdown()
+		end
+	end
+end)
+CrateOpenModal.CloseButton.Activated:Connect(function()
+	CrateOpenModal.Visible = false
+end)
+
+-- =====================
+-- INITIAL LOAD
+-- =====================
+
+-- Initial population of static tabs
+RefreshBuyCrates()
+RefreshAllStomps()
+
+StompRemote:FireServer("RequestData")
+
+-- Connect to your existing stomp button
+local StompButton = MainScreenGui.Crew.BottomLeft:FindFirstChild("StompButton")
+if StompButton then
+	StompButton.Activated:Connect(function()
+		StompFrameUI.Enabled = true
+		SwitchTab("StoredCrates")
+		RefreshBuyCrates() -- Refresh on open
+		RefreshAllStomps() -- Refresh on open
+	end)
+end
