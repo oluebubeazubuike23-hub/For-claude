@@ -1,0 +1,90 @@
+-- Decompiled with the Synapse X Luau decompiler.
+
+local v1 = {};
+local l__ReplicatedStorage__2 = game.ReplicatedStorage;
+local v3 = require(game.ReplicatedStorage.Modules.Lightning);
+local v4 = require(game.ReplicatedStorage.Modules.Xeno);
+local v5 = require(game.ReplicatedStorage.Modules.CameraShaker);
+local l__TweenService__6 = game.TweenService;
+local l__Debris__7 = game.Debris;
+local u1 = 0;
+function v1.RunStompFx(p1, p2, p3, p4)
+	local v8 = os.time();
+	if v8 - u1 < 4.5 then
+		return;
+	end;
+	u1 = v8;
+	local v9 = game.ReplicatedStorage.KillFX.Sero.Cero:Clone();
+	v9.PrimaryPart.CFrame = CFrame.new(p2.CFrame.p) * CFrame.new(math.random(-25, 25), math.random(7, 15), math.random(-25, 25));
+	v9.PrimaryPart.CFrame = CFrame.lookAt(v9.PrimaryPart.CFrame.p, p2.Position + CFrame.new(0, 5, 0).Position);
+	v9.Parent = workspace.Ignored.Animations;
+	for v10, v11 in pairs(v9:GetChildren()) do
+		if v11:IsA("BasePart") and v11.Name ~= "HumanoidRootPart" then
+			game.TweenService:Create(v11, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+				Transparency = 0
+			}):Play();
+		end;
+	end;
+	game.Debris:AddItem(v9, 3);
+	v9.gg:Play();
+	local v12 = v9.AnimationController:LoadAnimation(v9.Animation);
+	v12:Play();
+	v12:AdjustSpeed(0.7);
+	v12:GetMarkerReachedSignal("Blast"):Connect(function()
+		v9.ar:Play();
+		v12:AdjustSpeed(1.3);
+		local v13 = game.ReplicatedStorage.KillFX.Sero.Beam:Clone();
+		local l__Magnitude__14 = (p2.Position - v9.Head.Attachment.WorldPosition).Magnitude;
+		v13.Parent = v9;
+		v13.CFrame = CFrame.lookAt(v9.Head.Attachment.WorldPosition, p2.Position) * CFrame.new(0, 0, -l__Magnitude__14 / 2) * CFrame.Angles(1.5707963267948966, 0, 0);
+		task.delay(0.1, function()
+			v13.Sound:Play();
+			local v15 = game.ReplicatedStorage.KillFX.Sero.Particle:Clone();
+			local v16 = Instance.new("Attachment", p2);
+			v15.Parent = p2;
+			for v17, v18 in pairs(v15:GetChildren()) do
+				v18.Enabled = true;
+				v18.Parent = v16;
+			end;
+			task.wait(0.25);
+			for v19, v20 in pairs(v16:GetChildren()) do
+				v20.Enabled = false;
+			end;
+		end);
+		task.delay(0, function()
+			game.TweenService:Create(v13, TweenInfo.new(0.4, Enum.EasingStyle.Bounce), {
+				Transparency = 0.5, 
+				Size = Vector3.new(7, l__Magnitude__14 + 15, 7)
+			}):Play();
+			while true do
+				v13.Attachment.Position = Vector3.new(0, v13.Size.Y / 2, 0);
+				v13.Attachment1.Position = Vector3.new(0, -v13.Size.Y / 2, 0);
+				v13.CFrame = CFrame.lookAt(v9.Head.Attachment.WorldPosition, p2.Position) * CFrame.new(0, 0, -l__Magnitude__14 / 2 - 10) * CFrame.Angles(1.5707963267948966, 0, 0);
+				task.wait();
+				if v9.Parent == nil then
+					break;
+				end;			
+			end;
+		end);
+		v9.Sound:Play();
+		task.delay(0.25, function()
+			for v21, v22 in pairs(v9:GetChildren()) do
+				if v22:IsA("BasePart") and v22.Name ~= "HumanoidRootPart" then
+					game.TweenService:Create(v22, TweenInfo.new(1, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut), {
+						Transparency = 1
+					}):Play();
+				end;
+			end;
+			task.wait(0.25);
+			for v23, v24 in pairs(v13.Beam:GetChildren()) do
+				v24.Enabled = false;
+			end;
+			game.TweenService:Create(v13, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {
+				Transparency = 0, 
+				Size = Vector3.new(0, l__Magnitude__14 + 15, 0)
+			}):Play();
+		end);
+	end);
+	return nil;
+end;
+return v1;
